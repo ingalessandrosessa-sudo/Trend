@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
 S&P 500;Indici;28/09/2026;0,872;7683,69;nessuna;;;;;;;
 Nasdaq 100;Indici;28/09/2026;1,323;30276,811;nessuna;;;;;;;
-DAX;Indici;28/09/2026;1,089;25374,42;nessuna;;;;;;;
-FTSE MIB;Indici;28/09/2026;1,18;51760,0;nessuna;;;;;;;
-Euro Stoxx 50;Indici;28/09/2026;1,064;6301,28;nessuna;;;;;;;
-Oro;Commodities;29/09/2026;2,477;4174,0;nessuna;;;;;;;
-Argento;Commodities;29/09/2026;2,566;61,26;nessuna;;;;;;;
-Petrolio WTI;Commodities;29/09/2026;4,72;93,93;nessuna;;;;;;;
+DAX;Indici;29/09/2026;1,033;25375,74;nessuna;;;;;;;
+FTSE MIB;Indici;29/09/2026;1,141;52152,422;nessuna;;;;;;;
+Euro Stoxx 50;Indici;29/09/2026;1,023;6328,54;nessuna;;;;;;;
+Oro;Commodities;29/09/2026;2,474;4178,9;nessuna;;;;;;;
+Argento;Commodities;29/09/2026;2,566;61,245;nessuna;;;;;;;
+Petrolio WTI;Commodities;29/09/2026;4,737;93,59;nessuna;;;;;;;
 Gas naturale;Commodities;29/09/2026;4,429;3,123;nessuna;;;;;;;
-EUR/USD;Valute;29/09/2026;0,441;1,137;nessuna;;;;;;;
-GBP/USD;Valute;29/09/2026;0,512;1,324;nessuna;;;;;;;
-USD/JPY;Valute;29/09/2026;0,924;157,394;rialzo;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,243;1,407;71,071
-EUR/CHF;Valute;29/09/2026;0,43;0,947;nessuna;;;;;;;
-Bitcoin;Cripto;29/09/2026;2,6;83857,109;nessuna;;;;;;;
-Ethereum;Cripto;29/09/2026;3,277;2697,23;nessuna;;;;;;;
+EUR/USD;Valute;29/09/2026;0,449;1,135;nessuna;;;;;;;
+GBP/USD;Valute;29/09/2026;0,513;1,323;nessuna;;;;;;;
+USD/JPY;Valute;29/09/2026;0,925;157,314;rialzo-debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,243;1,407;71,071
+EUR/CHF;Valute;28/09/2026;0,439;0,944;nessuna;;;;;;;
+Bitcoin;Cripto;29/09/2026;2,57;84034,93;nessuna;;;;;;;
+Ethereum;Cripto;29/09/2026;3,278;2712,62;nessuna;;;;;;;
