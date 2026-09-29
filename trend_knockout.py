@@ -62,6 +62,7 @@ ORIZZONTI = [1, 3, 5, 10, 20, 40, 60]
 MODI = ["Long+Short", "Solo long", "Solo short"]
 T_MIN = 2.0
 MIN_TRADE = 20
+MIN_CONFERME = 2        # segnale operativo solo se la regola vale su almeno 2 strumenti della classe
 CARTELLA = "docs"
 FUSO = ZoneInfo("Europe/Rome")
 
@@ -265,7 +266,10 @@ def segnali_oggi(dati, ris):
         elif best["Modo"] == "Solo short":
             s = min(s, 0)
         dist = float(best["MAE90_%"]) * 1.2
-        out.append({**base, "Stato": {1: "rialzo", -1: "ribasso"}.get(int(s), "fuori"),
+        stato = {1: "rialzo", -1: "ribasso"}.get(int(s), "fuori")
+        if stato != "fuori" and int(best["Conferme_classe"]) < MIN_CONFERME:
+            stato += "-debole"      # direzione indicata ma regola non confermata nella classe
+        out.append({**base, "Stato": stato,
                     "Regola": best["Regola"], "Modo": best["Modo"],
                     "Orizzonte_gg": int(best["Orizzonte_gg"]),
                     "Conferme_classe": int(best["Conferme_classe"]),
@@ -288,6 +292,7 @@ def modo_testo(m):
 
 
 ETICHETTE = {"rialzo": "Rialzo", "ribasso": "Ribasso", "fuori": "Stare fuori",
+             "rialzo-debole": "Rialzo da confermare", "ribasso-debole": "Ribasso da confermare",
              "nessuna": "Nessuna regola valida"}
 
 
@@ -295,10 +300,14 @@ def pagina(seg, ris, aggiornato):
     e = html.escape
     operativi = seg[seg["Stato"].isin(["rialzo", "ribasso"])]
     n_op, n_tot = len(operativi), len(seg)
+    deboli = seg[seg["Stato"].str.endswith("-debole")]
     if n_op == 0:
         verdetto = "Nessun segnale operativo oggi"
-        sotto = (f"Su {n_tot} strumenti nessuna regola robusta indica una direzione. "
+        sotto = (f"Su {n_tot} strumenti nessuna regola confermata indica una direzione. "
                  "Non ci sono basi statistiche per aprire posizioni.")
+        if not deboli.empty:
+            sotto += (f" {len(deboli)} {'segnale da confermare' if len(deboli) == 1 else 'segnali da confermare'}"
+                      ", probabilmente casuali.")
     else:
         verdetto = f"{n_op} {'segnale operativo' if n_op == 1 else 'segnali operativi'} oggi"
         sotto = ", ".join(f"{r['Strumento']} in {r['Stato']}" for _, r in operativi.iterrows())
@@ -318,6 +327,8 @@ def pagina(seg, ris, aggiornato):
                 if r["Stato"] in ("rialzo", "ribasso"):
                     det.insert(1, f"Barriera ad almeno {num(r['Distanza_min_barriera_%'])}% dal prezzo, "
                                   f"leva massima circa {num(r['Leva_max_indicativa'], 0)}")
+                if r["Stato"].endswith("-debole"):
+                    det.insert(1, "Regola valida su un solo strumento: può essere un risultato casuale. Non usarla per operare.")
                 conf = int(r["Conferme_classe"])
                 det.append(f"Esito positivo nel {num(r['Hit_OOS_%'], 0)}% dei casi dal 2020; "
                            f"valida su {conf} {'strumento' if conf == 1 else 'strumenti'} della classe")
@@ -355,10 +366,10 @@ def pagina(seg, ris, aggiornato):
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{{--carta:#E9EEF2;--foglio:#F7F9FA;--inchiostro:#17212B;--tenue:#5B6875;--filo:#CBD3DA;
---su:#1D7348;--su-f:#DCEFE3;--giu:#A8321F;--giu-f:#F6E0DA;--neutro:#6C7885;--neutro-f:#E3E7EB;
+--su:#1D7348;--su-f:#DCEFE3;--attesa:#8A5A00;--attesa-f:#F4E7C8;--giu:#A8321F;--giu-f:#F6E0DA;--neutro:#6C7885;--neutro-f:#E3E7EB;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}
 @media (prefers-color-scheme:dark){{:root{{--carta:#10161C;--foglio:#18212A;--inchiostro:#E4EAF0;--tenue:#94A1AE;
---filo:#2B3642;--su:#5CC98E;--su-f:#173726;--giu:#F08A74;--giu-f:#3E1E17;--neutro:#9AA6B2;--neutro-f:#232D37}}}}
+--filo:#2B3642;--su:#5CC98E;--su-f:#173726;--attesa:#E0B45C;--attesa-f:#3A2C10;--giu:#F08A74;--giu-f:#3E1E17;--neutro:#9AA6B2;--neutro-f:#232D37}}}}
 *{{box-sizing:border-box}}
 html{{scroll-padding-top:env(safe-area-inset-top,0px)}}
 body{{margin:0;background:var(--carta);color:var(--inchiostro);
@@ -376,6 +387,8 @@ ul{{list-style:none;margin:0;padding:0}}
 .stato{{font-weight:600;font-size:.85rem;padding:.1rem .55rem;border-radius:4px;background:var(--neutro-f);color:var(--neutro);white-space:nowrap}}
 .s-rialzo{{border-left-color:var(--su)}} .s-rialzo .stato{{background:var(--su-f);color:var(--su)}}
 .s-ribasso{{border-left-color:var(--giu)}} .s-ribasso .stato{{background:var(--giu-f);color:var(--giu)}}
+.s-rialzo-debole,.s-ribasso-debole{{border-left-color:var(--attesa)}}
+.s-rialzo-debole .stato,.s-ribasso-debole .stato{{background:var(--attesa-f);color:var(--attesa)}}
 .s-nessuna{{border-left-color:var(--filo)}} .s-nessuna .nome{{color:var(--tenue)}}
 .det{{margin:.2rem 0 0;font-size:.85rem;color:var(--tenue)}}
 details{{margin-top:2rem;border-top:1px solid var(--filo);padding-top:1rem}}
@@ -398,7 +411,8 @@ a{{color:inherit}}
 <p class="vuoto">Vicine alla soglia ma non robuste in entrambi i periodi. Non usarle per operare.</p>{lista_oss}</details>
 <details><summary>Come leggere questa pagina</summary>
 <p class="vuoto">Ogni giorno vengono ripetute {n_test} prove su dati 2010-oggi. Una regola è valida solo se batte il semplice
-mantenimento dello strumento sia nel 2010-2019 sia dal 2020 in poi. Il segnale vale per un ingresso all'apertura successiva
+mantenimento dello strumento sia nel 2010-2019 sia dal 2020 in poi. Un segnale diventa operativo solo se la stessa regola vale anche su almeno un altro strumento della stessa classe;
+altrimenti è segnalato come da confermare. Il segnale vale per un ingresso all'apertura successiva
 (alla chiusura per le valute) e per il numero di giorni indicato. La distanza della barriera copre il 90% delle oscillazioni
 contrarie storiche più un margine del 20%. Costi di finanziamento dei Knock-Out non inclusi.</p>
 <p class="vuoto"><a href="dati/segnali_oggi.csv">Segnali in CSV</a> · <a href="dati/risultati_completi.csv">Tutti i risultati in CSV</a></p>
