@@ -21,6 +21,13 @@ Componente geopolitica:
     viene trattato come un nuovo picco, cosi' le regole geopolitiche robuste
     possono dare il segnale la mattina stessa dell'evento.
 
+Componente macro:
+  - tassi e rendimenti giornalieri dal database FRED della Federal Reserve di St. Louis
+    (rendimenti USA, tassi reali, inflazione attesa, curva, dollaro, tassi Fed e BCE):
+    diventano regole "Macro" testate come le altre;
+  - calendario degli appuntamenti (Fed, BCE, Bank of Japan, inflazione e occupazione USA)
+    nel file calendario_macro.csv: avvisa nei giorni a rischio, non genera segnali.
+
 Forza del segnale 0-100: 50 punti dalla significativita' statistica,
 30 dalle conferme su altri strumenti della classe, 20 dalla percentuale
 di operazioni positive dal 2020.
@@ -93,8 +100,17 @@ RADAR_QUERY = [
     "Russia Ukraine attack OR pipeline sabotage",
     "Taiwan OR \"North Korea\" military",
 ]
-RADAR_PAROLE = ["strike", "airstrike", "missile", "bomb", "invasion", "invade", "attack",
-                "war", "troops", "drone", "explosion", "retaliat", "escalat", "shelling"]
+# Un titolo conta solo se contiene un'AZIONE militare e un ATTORE geopolitico rilevante per i mercati
+RADAR_AZIONI = [r"\bair ?strikes?\b", r"\bmissiles?\b", r"\bbomb(s|ed|ing)?\b", r"\binvasion\b",
+                r"\binvade[sd]?\b", r"\battack(s|ed)?\b", r"\bstrikes?\b", r"\btroops\b",
+                r"\bdrones?\b", r"\bshelling\b", r"\bretaliat\w*", r"\bescalat\w*",
+                r"\bwar\b", r"\bblockade\b", r"\bmobiliz\w*", r"\bthreaten(s|ed)?\b",
+                r"\bclos(e|es|ed|ure|ing)\b.*\b(strait|hormuz|pipeline|airspace)",
+                r"\bseiz(e|es|ed)\b.*\btanker", r"\bsabotage\b"]
+RADAR_ESCLUSI = [r"review.?bomb", r"\bposter\b", r"\bmovie\b", r"\bfilm\b", r"\bgame\b",
+                 r"\bnovel\b", r"\bbook\b", r"\bfootball\b", r"\bcricket\b", r"\bheart attack\b",
+                 r"\bcyber", r"\bprice war\b", r"\btrade war\b", r"\bculture war\b"]
+RADAR_GIORNI_CALIBRAZIONE = 10
 AREE = {
     "Medio Oriente": (["iran", "israel", "hormuz", "saudi", "yemen", "houthi", "gulf", "iraq",
                        "lebanon", "gaza", "hezbollah", "syria"], "Petrolio, Oro"),
@@ -166,6 +182,15 @@ def leggi_rss(query):
     return out
 
 
+def titolo_rilevante(titolo):
+    t = titolo.lower()
+    if any(re.search(x, t) for x in RADAR_ESCLUSI):
+        return False
+    if not any(re.search(x, t) for x in RADAR_AZIONI):
+        return False
+    return any(k in t for kw, _ in AREE.values() for k in kw)
+
+
 def radar_notizie(storico):
     """Conta i titoli geopolitici delle ultime 24 ore e li confronta con i giorni precedenti."""
     limite = datetime.now(ZoneInfo("UTC")) - timedelta(hours=24)
@@ -176,7 +201,7 @@ def radar_notizie(storico):
                 chiave = re.sub(r"\W+", " ", t["titolo"].lower()).strip()[:90]
                 if chiave in visti or (t["quando"] and t["quando"] < limite):
                     continue
-                if not any(p in t["titolo"].lower() for p in RADAR_PAROLE):
+                if not titolo_rilevante(t["titolo"]):
                     continue
                 visti.add(chiave)
                 titoli.append(t)
@@ -185,13 +210,14 @@ def radar_notizie(storico):
         return {"livello": "non disponibile", "conteggio": 0, "titoli": [], "aree": []}
 
     n = len(titoli)
-    base = storico["conteggio"].tail(60) if storico is not None and len(storico) >= 10 else None
-    if base is not None and base.median() > 0:
-        rapporto = n / base.median()
+    giorni = len(storico) if storico is not None else 0
+    if giorni >= RADAR_GIORNI_CALIBRAZIONE and storico["conteggio"].tail(60).median() > 0:
+        rapporto = n / storico["conteggio"].tail(60).median()
         livello = "alto" if (rapporto >= 2.5 and n >= 15) else ("elevato" if rapporto >= 1.5 else "normale")
     else:
+        # nei primi giorni il radar raccoglie solo la media di riferimento: nessun allarme
         rapporto = None
-        livello = "alto" if n >= 60 else ("elevato" if n >= 35 else "normale")
+        livello = "calibrazione"
 
     testo = " ".join(t["titolo"].lower() for t in titoli)
     aree = sorted(((a, sum(testo.count(k) for k in kw), asset) for a, (kw, asset) in AREE.items()),
@@ -203,7 +229,7 @@ def radar_notizie(storico):
 
 
 def carica_storico_radar():
-    p = os.path.join(CARTELLA, "dati", "radar_storico.csv")
+    p = os.path.join(CARTELLA, "dati", "radar_storico_v2.csv")
     if os.path.exists(p):
         try:
             return pd.read_csv(p, parse_dates=["data"])
@@ -216,7 +242,7 @@ def salva_storico_radar(storico, radar):
     if radar["livello"] == "non disponibile":
         return storico
     oggi = pd.Timestamp(datetime.now(FUSO).date())
-    ordine = {"normale": 0, "elevato": 1, "alto": 2}
+    ordine = {"calibrazione": 0, "normale": 0, "elevato": 1, "alto": 2}
     conteggio, livello = radar["conteggio"], radar["livello"]
     prima = storico[storico["data"] == oggi] if len(storico) else storico
     if len(prima):     # nella stessa giornata si conserva il valore piu' alto
@@ -227,7 +253,7 @@ def salva_storico_radar(storico, radar):
     riga = pd.DataFrame([{"data": oggi, "conteggio": conteggio, "livello": livello}])
     storico = storico[storico["data"] != oggi] if len(storico) else storico
     storico = pd.concat([storico, riga], ignore_index=True).sort_values("data").tail(400)
-    storico.to_csv(os.path.join(CARTELLA, "dati", "radar_storico.csv"), index=False)
+    storico.to_csv(os.path.join(CARTELLA, "dati", "radar_storico_v2.csv"), index=False)
     return storico
 
 
@@ -249,6 +275,130 @@ def date_picchi_geo(gpr, storico_radar):
     m7 = gpr.rolling(7).mean()
     regime = m7 > m7.rolling(365, min_periods=180).quantile(0.8)
     return date, regime
+
+
+# --------------------------------------------------------------------------
+# MACRO: tassi di mercato (FRED) e calendario degli appuntamenti
+# --------------------------------------------------------------------------
+FRED = {
+    "DGS2": "Rendimento Treasury USA 2 anni",
+    "DGS10": "Rendimento Treasury USA 10 anni",
+    "DFII10": "Tasso reale USA 10 anni",
+    "T10YIE": "Inflazione attesa USA 10 anni",
+    "T10Y2Y": "Curva USA (10 anni meno 2 anni)",
+    "DTWEXBGS": "Dollaro ponderato",
+    "DFEDTARU": "Tasso Fed (limite superiore)",
+    "ECBDFR": "Tasso BCE sui depositi",
+}
+AREE_MACRO = {
+    "USA": ["S&P 500", "Nasdaq 100", "Oro", "Argento", "EUR/USD", "GBP/USD", "USD/JPY", "Bitcoin", "Ethereum"],
+    "EUROPA": ["DAX", "FTSE MIB", "Euro Stoxx 50", "EUR/USD", "EUR/CHF"],
+    "GIAPPONE": ["USD/JPY"],
+}
+
+
+def scarica_fred(codice):
+    try:
+        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={codice}"
+        req = urllib.request.Request(url, headers=UA)
+        x = pd.read_csv(io.BytesIO(urllib.request.urlopen(req, timeout=60).read()))
+        d = pd.to_datetime(x.iloc[:, 0], errors="coerce")
+        v = pd.to_numeric(x.iloc[:, 1], errors="coerce")
+        serie = pd.Series(v.values, index=d).dropna()
+        return serie[serie.index.notna()].sort_index() if len(serie) > 500 else None
+    except Exception as ex:
+        print(f"   FRED {codice} non disponibile: {ex}")
+        return None
+
+
+def scarica_macro():
+    out = {}
+    for c in FRED:
+        s = scarica_fred(c)
+        if s is not None:
+            out[c] = s
+    print(f"   serie macro scaricate: {len(out)} di {len(FRED)}")
+    return out
+
+
+def regole_macro(df, macro):
+    """Regole basate sulla direzione dei tassi. Ogni regola ha anche la versione inversa."""
+    base = {}
+
+    def al(serie):
+        return serie.reindex(df.index, method="ffill", limit=7)
+
+    def segno(x):
+        return np.sign(x)
+
+    if "DFII10" in macro:
+        for n in (20, 60):
+            base[f"tassi reali USA in calo ({n}g)"] = al(-segno(macro["DFII10"].diff(n)))
+    if "DGS2" in macro:
+        for n in (20, 60):
+            base[f"rendimento USA 2 anni in salita ({n}g)"] = al(segno(macro["DGS2"].diff(n)))
+    if "T10YIE" in macro:
+        base["inflazione attesa in salita (20g)"] = al(segno(macro["T10YIE"].diff(20)))
+    if "DTWEXBGS" in macro:
+        base["dollaro in salita (20g)"] = al(segno(macro["DTWEXBGS"].pct_change(20)))
+    if "T10Y2Y" in macro:
+        base["curva USA positiva"] = al(segno(macro["T10Y2Y"]))
+        base["curva USA in irripidimento (60g)"] = al(segno(macro["T10Y2Y"].diff(60)))
+    if "DFEDTARU" in macro:
+        base["Fed in fase di taglio (6 mesi)"] = al(-segno(macro["DFEDTARU"].diff(126)))
+    if "ECBDFR" in macro:
+        base["BCE in fase di taglio (6 mesi)"] = al(-segno(macro["ECBDFR"].diff(126)))
+    R = {}
+    for nome, sig in base.items():
+        R[f"Macro: {nome}"] = sig
+        R[f"Macro: {nome}, inverso"] = -sig
+    return R
+
+
+def leggi_calendario():
+    """Calendario dal file calendario_macro.csv, integrato con il calendario ufficiale BLS se raggiungibile."""
+    righe = []
+    try:
+        c = pd.read_csv("calendario_macro.csv", sep=";")
+        for _, r in c.iterrows():
+            righe.append((pd.Timestamp(r["data"]), str(r["evento"]), str(r["strumenti"]).strip().upper()))
+    except Exception as ex:
+        print(f"   calendario_macro.csv non leggibile: {ex}")
+    try:
+        req = urllib.request.Request("https://www.bls.gov/schedule/news_release/bls.ics", headers=UA)
+        testo = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "ignore")
+        noti = {(d.date(), "CPI" in e) for d, e, _ in righe if "USA" in e}
+        for ev in testo.split("BEGIN:VEVENT")[1:]:
+            m_s = re.search(r"SUMMARY:(.*)", ev)
+            m_d = re.search(r"DTSTART[^:]*:(\d{8})", ev)
+            if not m_s or not m_d:
+                continue
+            titolo = m_s.group(1).strip()
+            d = pd.Timestamp(datetime.strptime(m_d.group(1), "%Y%m%d"))
+            if titolo.startswith("Consumer Price Index") and (d.date(), True) not in noti:
+                righe.append((d, "Inflazione USA (CPI)", "USA"))
+            elif titolo.startswith("Employment Situation") and (d.date(), False) not in noti:
+                righe.append((d, "Occupazione USA (Employment Situation)", "USA"))
+    except Exception as ex:
+        print(f"   calendario BLS non raggiungibile, uso solo il file: {ex}")
+    righe = sorted(set(righe))
+    return righe
+
+
+def agenda(calendario, giorni=7):
+    oggi = pd.Timestamp(datetime.now(FUSO).date())
+    fine = oggi + pd.Timedelta(days=giorni)
+    return [(d, e, a) for d, e, a in calendario if oggi <= d <= fine]
+
+
+def rischio_evento(nome, calendario):
+    """Eventi di oggi o domani che riguardano lo strumento."""
+    oggi = pd.Timestamp(datetime.now(FUSO).date())
+    out = []
+    for d, e, area in calendario:
+        if nome in AREE_MACRO.get(area, []) and 0 <= (d - oggi).days <= 1:
+            out.append(("oggi" if d == oggi else "domani", e))
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -277,7 +427,7 @@ def indicatori(df):
     return df
 
 
-def regole(df, vix, picchi=None, regime_geo=None):
+def regole(df, vix, picchi=None, regime_geo=None, macro=None):
     c = df["Close"]
     R = {}
     for n in (20, 50, 100, 200):
@@ -336,6 +486,8 @@ def regole(df, vix, picchi=None, regime_geo=None):
         R["Geo: vendita dopo picco"] = pd.Series(-subito, index=df.index)
         R["Geo: acquisto 3 giorni dopo picco"] = pd.Series(dopo3, index=df.index)
         R["Geo: vendita 3 giorni dopo picco"] = pd.Series(-dopo3, index=df.index)
+    if macro:
+        R.update(regole_macro(df, macro))
     if regime_geo is not None:
         g = regime_geo.reindex(df.index, method="ffill").fillna(False).astype(bool)
         R["Geo: rischio elevato, acquisto"] = pd.Series(np.where(g, 1, 0), index=df.index)
@@ -514,12 +666,16 @@ def blocco_radar(radar, gpr):
     e = html.escape
     liv = radar["livello"]
     testo_liv = {"alto": "Alto", "elevato": "Elevato", "normale": "Normale",
-                 "non disponibile": "Non disponibile"}[liv]
+                 "calibrazione": "In calibrazione", "non disponibile": "Non disponibile"}[liv]
     righe = [f'<div class="testa"><span class="nome">Radar geopolitico</span>'
              f'<span class="stato">{testo_liv}</span></div>']
     if liv != "non disponibile":
         conf = f", {num(radar['rapporto'])} volte la media recente" if radar.get("rapporto") else ""
         righe.append(f'<p class="det">{radar["conteggio"]} titoli su conflitti e attacchi nelle ultime 24 ore{conf}.</p>')
+        if liv == "calibrazione":
+            giorni = len(carica_storico_radar())
+            righe.append(f'<p class="det">Il radar sta imparando il volume normale di notizie '
+                         f'({giorni} di {RADAR_GIORNI_CALIBRAZIONE} giorni). Fino ad allora non genera allarmi.</p>')
         if radar["aree"]:
             righe.append('<p class="det">Aree più citate: ' + "; ".join(
                 f"{e(a)} (mercati sensibili: {e(asset)})" for a, _, asset in radar["aree"]) + ".</p>")
@@ -536,13 +692,44 @@ def blocco_radar(radar, gpr):
     return f'<section><h2>Geopolitica</h2><div class="riga radar r-{liv.replace(" ", "-")}">{"".join(righe)}</div></section>'
 
 
+def blocco_macro(macro, calendario):
+    e = html.escape
+    ag = agenda(calendario)
+    if ag:
+        gg = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
+        voci = "".join(f"<li><strong>{gg[d.weekday()]} {d.strftime('%d/%m')}</strong> {e(ev)}</li>" for d, ev, _ in ag)
+        agenda_html = f'<ul class="titoli">{voci}</ul>'
+    else:
+        agenda_html = '<p class="det">Nessun appuntamento importante nei prossimi 7 giorni.</p>'
+    ultimo = max((d for d, _, _ in calendario), default=None)
+    avviso = ""
+    if ultimo is None or (ultimo - pd.Timestamp(datetime.now(FUSO).date())).days < 45:
+        avviso = ('<p class="det"><strong>Il calendario sta per esaurirsi:</strong> aggiungi le nuove date '
+                  'nel file calendario_macro.csv.</p>')
+    letture = []
+    for c in ("DGS2", "DFII10", "T10YIE", "T10Y2Y", "DFEDTARU", "ECBDFR"):
+        if c in macro:
+            s = macro[c]
+            var = s.iloc[-1] - s.iloc[-21] if len(s) > 21 else 0
+            freccia = "in salita" if var > 0.02 else ("in calo" if var < -0.02 else "stabile")
+            letture.append(f"<tr><td>{e(FRED[c])}</td><td>{num(s.iloc[-1], 2)}%</td><td>{freccia} nell'ultimo mese</td></tr>")
+    tab = ("<div class='scorri'><table class='compatta'><tbody>" + "".join(letture) + "</tbody></table></div>") if letture else \
+          "<p class='det'>Dati sui tassi non disponibili oggi.</p>"
+    return (f'<section><h2>Macro</h2><div class="riga"><div class="testa"><span class="nome">Prossimi 7 giorni</span></div>'
+            f'{agenda_html}{avviso}<details class="interno"><summary>Tassi di mercato</summary>{tab}'
+            f'<p class="det">Fonte FRED, Federal Reserve Bank of St. Louis. I tassi riflettono già le sorprese dei dati macro; '
+            f'le regole "Macro" li usano come segnali, testate come tutte le altre.</p></details></div></section>')
+
+
 def barra_forza(p, fa):
     return (f'<div class="forza" role="img" aria-label="Forza del vantaggio {p} su 100, {fa}">'
             f'<div class="traccia"><div class="pieno f-{fa}" style="width:{p}%"></div></div>'
             f'<span class="punti">{p}<small>/100</small> {fa}</span></div>')
 
 
-def pagina(seg, ris, aggiornato, radar, gpr):
+def pagina(seg, ris, aggiornato, radar, gpr, macro=None, calendario=None):
+    macro = macro or {}
+    calendario = calendario or []
     e = html.escape
     operativi = seg[seg["Stato"].isin(["rialzo", "ribasso"])]
     n_op, n_tot = len(operativi), len(seg)
@@ -566,6 +753,8 @@ def pagina(seg, ris, aggiornato, radar, gpr):
         righe = []
         for _, r in g.iterrows():
             det = [f"Ultimo dato {e(r['Ultimo dato'])}, volatilità giornaliera media {num(r['ATR14_%'])}%"]
+            for quando, ev in rischio_evento(r["Strumento"], calendario):
+                det.insert(0, f"<strong>Attenzione, {quando}: {e(ev)}.</strong> Possibili movimenti bruschi: barriere vicine sconsigliate.")
             if r["Stato"] != "nessuna":
                 gg = int(r["Orizzonte_gg"])
                 det.insert(0, f"{e(r['Regola'])}, {modo_testo(r['Modo'])}, "
@@ -650,6 +839,9 @@ ul{{list-style:none;margin:0;padding:0}}
 .titoli{{margin:.5rem 0 .2rem;padding:0}}
 .titoli li{{font-size:.82rem;margin:.35rem 0;line-height:1.35}}
 .titoli a{{text-decoration:none;border-bottom:1px solid var(--filo)}}
+details.interno{{margin-top:.6rem;border-top:0;padding-top:0}}
+details.interno summary{{font-size:.85rem}}
+table.compatta{{min-width:0;width:100%}}
 details{{margin-top:2rem;border-top:1px solid var(--filo);padding-top:1rem}}
 summary{{cursor:pointer;font-weight:600}}
 .scorri{{overflow-x:auto;margin-top:.75rem}}
@@ -665,6 +857,7 @@ a{{color:inherit}}
 <h1 class="verdetto">{e(verdetto)}</h1>
 <p class="sotto">{e(sotto)}</p>
 {blocco_radar(radar, gpr)}
+{blocco_macro(macro, calendario)}
 {"".join(gruppi)}
 <details><summary>Regole che superano la selezione</summary>{tab_rob}</details>
 <details><summary>In osservazione, non ancora valide</summary>
@@ -676,7 +869,9 @@ altrimenti è segnalato come da confermare.
 La forza da 0 a 100 somma: significatività statistica in entrambi i periodi (fino a 50 punti), conferme su altri strumenti
 della classe (fino a 30) e percentuale di operazioni positive dal 2020 (fino a 20). Sotto 25 non c'è vantaggio misurabile,
 25-49 debole, 50-74 moderato, da 75 forte. Le regole "Geo" usano i picchi dell'indice di rischio geopolitico di Caldara e
-Iacoviello (Federal Reserve) e, per i giorni più recenti, il radar delle notizie. Il segnale vale per un ingresso all'apertura successiva
+Iacoviello (Federal Reserve) e, per i giorni più recenti, il radar delle notizie. Le regole "Macro" usano la direzione
+dei tassi di mercato (FRED); ognuna è provata anche in versione inversa. Gli avvisi del calendario macro non generano segnali:
+segnalano i giorni in cui un Knock-Out con barriera vicina rischia di più. Il segnale vale per un ingresso all'apertura successiva
 (alla chiusura per le valute) e per il numero di giorni indicato. La distanza della barriera copre il 90% delle oscillazioni
 contrarie storiche più un margine del 20%. Costi di finanziamento dei Knock-Out non inclusi.</p>
 <p class="vuoto"><a href="dati/segnali_oggi.csv">Segnali in CSV</a> · <a href="dati/risultati_completi.csv">Tutti i risultati in CSV</a></p>
@@ -740,6 +935,9 @@ def main():
     storico = salva_storico_radar(storico, radar)
     print(f"   radar: {radar['livello']} ({radar['conteggio']} titoli)")
     picchi, regime_geo = date_picchi_geo(gpr, storico)
+    print("Scarico tassi e dati macro (FRED)...")
+    macro = scarica_macro()
+    calendario = leggi_calendario()
 
     dati = {}
     for nome, (tk, classe) in STRUMENTI.items():
@@ -749,7 +947,7 @@ def main():
             print("   dati insufficienti, strumento saltato")
             continue
         df = indicatori(df)
-        dati[nome] = (df, regole(df, vix, picchi, regime_geo), classe)
+        dati[nome] = (df, regole(df, vix, picchi, regime_geo, macro), classe)
 
     if not dati:
         raise SystemExit("Nessun dato scaricato: Yahoo Finance non ha risposto.")
@@ -765,7 +963,7 @@ def main():
         ris.round(3).to_csv(os.path.join(CARTELLA, "dati", "risultati_completi.csv"), **opts)
     seg.round(3).to_csv(os.path.join(CARTELLA, "dati", "segnali_oggi.csv"), **opts)
     with open(os.path.join(CARTELLA, "index.html"), "w", encoding="utf-8") as f:
-        f.write(pagina(seg, ris, aggiornato, radar, gpr))
+        f.write(pagina(seg, ris, aggiornato, radar, gpr, macro, calendario))
 
     telegram(seg, aggiornato, radar)
     n_rob = int(ris["Robusta"].sum()) if not ris.empty else 0
