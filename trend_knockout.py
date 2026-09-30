@@ -38,6 +38,9 @@ Esecuzione locale:  python trend_knockout.py   (poi apri docs/index.html)
 import html
 import io
 import json
+import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 import re
 import xml.etree.ElementTree as ET
 import os
@@ -50,6 +53,10 @@ from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
 warnings.filterwarnings("ignore")
+try:                                   # messaggi visibili subito nel registro di GitHub
+    sys.stdout.reconfigure(line_buffering=True)
+except Exception:
+    pass
 
 import numpy as np
 import pandas as pd
@@ -91,6 +98,25 @@ FUSO = ZoneInfo("Europe/Rome")
 
 GPR_URL = "https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls"
 UA = {"User-Agent": "Mozilla/5.0 (trend-knockout personal research)"}
+
+
+def leggi_url(url, limite=25, dati=None):
+    """Scarica un indirizzo con un limite di tempo RIGIDO: un sito lento non puo' bloccare tutto."""
+    esito = {}
+
+    def lavoro():
+        try:
+            req = urllib.request.Request(url, data=dati, headers=UA)
+            esito["ok"] = urllib.request.urlopen(req, timeout=limite).read()
+        except Exception as ex:
+            esito["errore"] = ex
+
+    t = threading.Thread(target=lavoro, daemon=True)
+    t.start()
+    t.join(limite + 5)
+    if "ok" in esito:
+        return esito["ok"]
+    raise esito.get("errore", TimeoutError(f"nessuna risposta in {limite + 5} s"))
 
 # Radar notizie: ricerche su Google News nelle ultime 24 ore
 RADAR_QUERY = [
@@ -149,8 +175,7 @@ def scarica(ticker, tentativi=3):
 def scarica_gpr():
     """Serie giornaliera GPRD (indice di rischio geopolitico). None se non disponibile."""
     try:
-        req = urllib.request.Request(GPR_URL, headers=UA)
-        dati = urllib.request.urlopen(req, timeout=60).read()
+        dati = leggi_url(GPR_URL, 40)
         x = pd.read_excel(io.BytesIO(dati))
         col = {c.lower(): c for c in x.columns}
         if "date" in col:
@@ -169,8 +194,7 @@ def scarica_gpr():
 def leggi_rss(query):
     q = urllib.parse.quote(f"{query} when:1d")
     url = f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
-    req = urllib.request.Request(url, headers=UA)
-    radice = ET.fromstring(urllib.request.urlopen(req, timeout=30).read())
+    radice = ET.fromstring(leggi_url(url, 20))
     out = []
     for it in radice.iter("item"):
         titolo = (it.findtext("title") or "").strip()
@@ -300,8 +324,7 @@ AREE_MACRO = {
 def scarica_fred(codice):
     try:
         url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={codice}"
-        req = urllib.request.Request(url, headers=UA)
-        x = pd.read_csv(io.BytesIO(urllib.request.urlopen(req, timeout=60).read()))
+        x = pd.read_csv(io.BytesIO(leggi_url(url, 25)))
         d = pd.to_datetime(x.iloc[:, 0], errors="coerce")
         v = pd.to_numeric(x.iloc[:, 1], errors="coerce")
         serie = pd.Series(v.values, index=d).dropna()
@@ -312,12 +335,29 @@ def scarica_fred(codice):
 
 
 def scarica_macro():
-    out = {}
-    for c in FRED:
-        s = scarica_fred(c)
-        if s is not None:
-            out[c] = s
-    print(f"   serie macro scaricate: {len(out)} di {len(FRED)}")
+    """Scarica le serie FRED in parallelo. Quelle non raggiungibili vengono prese dall'ultima copia salvata."""
+    cache = os.path.join(CARTELLA, "dati", "macro_cache.csv")
+    t0 = time.time()
+    with ThreadPoolExecutor(max_workers=len(FRED)) as pool:
+        out = {c: v for c, v in zip(FRED, pool.map(scarica_fred, FRED)) if v is not None}
+    salvate = {}
+    try:
+        x = pd.read_csv(cache, index_col=0, parse_dates=True)
+        salvate = {c: x[c].dropna() for c in x.columns}
+    except Exception:
+        pass
+    mancanti = [c for c in FRED if c not in out and c in salvate
+                and (pd.Timestamp.now() - salvate[c].index.max()).days <= 10]
+    for c in mancanti:
+        out[c] = salvate[c]
+    if mancanti:
+        print(f"   FRED lento o non raggiungibile per {len(mancanti)} serie: uso i dati salvati")
+    if out:
+        try:
+            pd.DataFrame(out).to_csv(cache)
+        except Exception:
+            pass
+    print(f"   serie macro disponibili: {len(out)} di {len(FRED)} ({time.time() - t0:.0f} s)")
     return out
 
 
@@ -365,8 +405,7 @@ def leggi_calendario():
     except Exception as ex:
         print(f"   calendario_macro.csv non leggibile: {ex}")
     try:
-        req = urllib.request.Request("https://www.bls.gov/schedule/news_release/bls.ics", headers=UA)
-        testo = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "ignore")
+        testo = leggi_url("https://www.bls.gov/schedule/news_release/bls.ics", 15).decode("utf-8", "ignore")
         noti = {(d.date(), "CPI" in e) for d, e, _ in righe if "USA" in e}
         for ev in testo.split("BEGIN:VEVENT")[1:]:
             m_s = re.search(r"SUMMARY:(.*)", ev)
@@ -911,7 +950,7 @@ def telegram(seg, aggiornato, radar):
         righe.append(url)
     try:
         dati = urllib.parse.urlencode({"chat_id": chat, "text": "\n".join(righe)}).encode()
-        urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", dati, timeout=20)
+        leggi_url(f"https://api.telegram.org/bot{token}/sendMessage", 20, dati)
         print("Messaggio Telegram inviato.")
     except Exception as ex:
         print(f"Invio Telegram non riuscito: {ex}")
@@ -929,7 +968,7 @@ def main():
     os.makedirs(os.path.join(CARTELLA, "dati"), exist_ok=True)
     print("Scarico indice di rischio geopolitico (GPR)...")
     gpr = scarica_gpr()
-    print("Leggo il radar delle notizie...")
+    print(f"   fatto ({time.time() - t0:.0f} s). Leggo il radar delle notizie...")
     storico = carica_storico_radar()
     radar = radar_notizie(storico)
     storico = salva_storico_radar(storico, radar)
@@ -952,8 +991,9 @@ def main():
     if not dati:
         raise SystemExit("Nessun dato scaricato: Yahoo Finance non ha risposto.")
 
-    print("Ricerca in corso...")
+    print(f"Dati scaricati in {time.time() - t0:.0f} s. Ricerca in corso...")
     ris = ricerca(dati)
+    print(f"Ricerca completata in {time.time() - t0:.0f} s")
     seg = segnali_oggi(dati, ris)
     aggiornato = datetime.now(FUSO).strftime("%d/%m/%Y alle %H:%M")
 
