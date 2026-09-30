@@ -11,19 +11,35 @@ Ad ogni esecuzione:
      confermate su piu' strumenti della stessa classe) e ne calcola il segnale;
   5. scrive la pagina web docs/index.html e i CSV in docs/dati/;
   6. (facoltativo) invia un riepilogo su Telegram se sono impostate le
-     variabili TELEGRAM_TOKEN e TELEGRAM_CHAT_ID.
+     variabili TELEGRAM_TOKEN e TELEGRAM_CHAT_ID (solo quando qualcosa cambia).
+
+Componente geopolitica:
+  - storico: Geopolitical Risk Index giornaliero (Caldara e Iacoviello,
+    matteoiacoviello.com/gpr.htm). I picchi dell'indice diventano regole
+    ("acquisto/vendita dopo un picco geopolitico") testate come tutte le altre;
+  - tempo reale: radar dei titoli di Google News. Quando il radar e' "alto"
+    viene trattato come un nuovo picco, cosi' le regole geopolitiche robuste
+    possono dare il segnale la mattina stessa dell'evento.
+
+Forza del segnale 0-100: 50 punti dalla significativita' statistica,
+30 dalle conferme su altri strumenti della classe, 20 dalla percentuale
+di operazioni positive dal 2020.
 
 Esecuzione locale:  python trend_knockout.py   (poi apri docs/index.html)
 """
 
 import html
+import io
 import json
+import re
+import xml.etree.ElementTree as ET
 import os
 import time
 import urllib.parse
 import urllib.request
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
+from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
 warnings.filterwarnings("ignore")
@@ -66,6 +82,27 @@ MIN_CONFERME = 2        # segnale operativo solo se la regola vale su almeno 2 s
 CARTELLA = "docs"
 FUSO = ZoneInfo("Europe/Rome")
 
+GPR_URL = "https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls"
+UA = {"User-Agent": "Mozilla/5.0 (trend-knockout personal research)"}
+
+# Radar notizie: ricerche su Google News nelle ultime 24 ore
+RADAR_QUERY = [
+    "airstrike OR \"missile strike\" OR bombing",
+    "invasion OR \"declares war\" OR \"troops cross\"",
+    "Iran OR Israel OR Hormuz attack",
+    "Russia Ukraine attack OR pipeline sabotage",
+    "Taiwan OR \"North Korea\" military",
+]
+RADAR_PAROLE = ["strike", "airstrike", "missile", "bomb", "invasion", "invade", "attack",
+                "war", "troops", "drone", "explosion", "retaliat", "escalat", "shelling"]
+AREE = {
+    "Medio Oriente": (["iran", "israel", "hormuz", "saudi", "yemen", "houthi", "gulf", "iraq",
+                       "lebanon", "gaza", "hezbollah", "syria"], "Petrolio, Oro"),
+    "Russia/Ucraina": (["russia", "ukrain", "kremlin", "putin", "pipeline", "nord stream",
+                        "moscow", "kyiv"], "Gas naturale, Petrolio, Oro"),
+    "Asia": (["taiwan", "china", "north korea", "pyongyang", "beijing"], "Oro, Indici"),
+}
+
 
 # --------------------------------------------------------------------------
 # DATI
@@ -88,6 +125,130 @@ def scarica(ticker, tentativi=3):
             print(f"   tentativo {k + 1} fallito: {e}")
         time.sleep(5 * (k + 1))
     return None
+
+
+# --------------------------------------------------------------------------
+# GEOPOLITICA: indice GPR storico + radar notizie
+# --------------------------------------------------------------------------
+def scarica_gpr():
+    """Serie giornaliera GPRD (indice di rischio geopolitico). None se non disponibile."""
+    try:
+        req = urllib.request.Request(GPR_URL, headers=UA)
+        dati = urllib.request.urlopen(req, timeout=60).read()
+        x = pd.read_excel(io.BytesIO(dati))
+        col = {c.lower(): c for c in x.columns}
+        if "date" in col:
+            d = pd.to_datetime(x[col["date"]], errors="coerce")
+        else:
+            d = pd.to_datetime(x[col["day"]].astype(str), format="%Y%m%d", errors="coerce")
+        serie = pd.Series(pd.to_numeric(x[col["gprd"]], errors="coerce").values, index=d)
+        serie = serie[serie.index.notna()].dropna().sort_index()
+        serie = serie[~serie.index.duplicated()]
+        return serie if len(serie) > 1000 else None
+    except Exception as ex:
+        print(f"   GPR non disponibile: {ex}")
+        return None
+
+
+def leggi_rss(query):
+    q = urllib.parse.quote(f"{query} when:1d")
+    url = f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
+    req = urllib.request.Request(url, headers=UA)
+    radice = ET.fromstring(urllib.request.urlopen(req, timeout=30).read())
+    out = []
+    for it in radice.iter("item"):
+        titolo = (it.findtext("title") or "").strip()
+        try:
+            quando = parsedate_to_datetime(it.findtext("pubDate"))
+        except Exception:
+            quando = None
+        out.append({"titolo": titolo, "link": it.findtext("link") or "", "quando": quando})
+    return out
+
+
+def radar_notizie(storico):
+    """Conta i titoli geopolitici delle ultime 24 ore e li confronta con i giorni precedenti."""
+    limite = datetime.now(ZoneInfo("UTC")) - timedelta(hours=24)
+    visti, titoli = set(), []
+    try:
+        for q in RADAR_QUERY:
+            for t in leggi_rss(q):
+                chiave = re.sub(r"\W+", " ", t["titolo"].lower()).strip()[:90]
+                if chiave in visti or (t["quando"] and t["quando"] < limite):
+                    continue
+                if not any(p in t["titolo"].lower() for p in RADAR_PAROLE):
+                    continue
+                visti.add(chiave)
+                titoli.append(t)
+    except Exception as ex:
+        print(f"   Radar notizie non disponibile: {ex}")
+        return {"livello": "non disponibile", "conteggio": 0, "titoli": [], "aree": []}
+
+    n = len(titoli)
+    base = storico["conteggio"].tail(60) if storico is not None and len(storico) >= 10 else None
+    if base is not None and base.median() > 0:
+        rapporto = n / base.median()
+        livello = "alto" if (rapporto >= 2.5 and n >= 15) else ("elevato" if rapporto >= 1.5 else "normale")
+    else:
+        rapporto = None
+        livello = "alto" if n >= 60 else ("elevato" if n >= 35 else "normale")
+
+    testo = " ".join(t["titolo"].lower() for t in titoli)
+    aree = sorted(((a, sum(testo.count(k) for k in kw), asset) for a, (kw, asset) in AREE.items()),
+                  key=lambda x: -x[1])
+    aree = [(a, c, asset) for a, c, asset in aree if c >= 3]
+    titoli.sort(key=lambda t: t["quando"] or limite, reverse=True)
+    return {"livello": livello, "conteggio": n, "rapporto": rapporto,
+            "titoli": titoli[:6], "aree": aree}
+
+
+def carica_storico_radar():
+    p = os.path.join(CARTELLA, "dati", "radar_storico.csv")
+    if os.path.exists(p):
+        try:
+            return pd.read_csv(p, parse_dates=["data"])
+        except Exception:
+            pass
+    return pd.DataFrame(columns=["data", "conteggio", "livello"])
+
+
+def salva_storico_radar(storico, radar):
+    if radar["livello"] == "non disponibile":
+        return storico
+    oggi = pd.Timestamp(datetime.now(FUSO).date())
+    ordine = {"normale": 0, "elevato": 1, "alto": 2}
+    conteggio, livello = radar["conteggio"], radar["livello"]
+    prima = storico[storico["data"] == oggi] if len(storico) else storico
+    if len(prima):     # nella stessa giornata si conserva il valore piu' alto
+        r0 = prima.iloc[-1]
+        conteggio = max(conteggio, int(r0["conteggio"]))
+        if ordine.get(r0["livello"], 0) > ordine.get(livello, 0):
+            livello = r0["livello"]
+    riga = pd.DataFrame([{"data": oggi, "conteggio": conteggio, "livello": livello}])
+    storico = storico[storico["data"] != oggi] if len(storico) else storico
+    storico = pd.concat([storico, riga], ignore_index=True).sort_values("data").tail(400)
+    storico.to_csv(os.path.join(CARTELLA, "dati", "radar_storico.csv"), index=False)
+    return storico
+
+
+def date_picchi_geo(gpr, storico_radar):
+    """Date di inizio dei picchi geopolitici: dal GPR storico + dai giorni di radar 'alto' successivi."""
+    if gpr is None:
+        return [], None
+    soglia = gpr.rolling(365, min_periods=180).quantile(0.95)
+    picco = (gpr > soglia).astype(int)
+    inizio = (picco == 1) & (picco.shift(1).rolling(10, min_periods=1).max() == 0)
+    date = list(gpr.index[inizio])
+    ultimo_gpr = gpr.index[-1]
+    if storico_radar is not None and len(storico_radar):
+        alti = storico_radar[(storico_radar["livello"] == "alto") & (storico_radar["data"] > ultimo_gpr)]
+        for d in sorted(alti["data"]):
+            if not date or (d - date[-1]).days > 14:
+                date.append(d)
+    # regime di rischio elevato (media 7 giorni nel 20% piu' alto dell'ultimo anno)
+    m7 = gpr.rolling(7).mean()
+    regime = m7 > m7.rolling(365, min_periods=180).quantile(0.8)
+    return date, regime
 
 
 # --------------------------------------------------------------------------
@@ -116,7 +277,7 @@ def indicatori(df):
     return df
 
 
-def regole(df, vix):
+def regole(df, vix, picchi=None, regime_geo=None):
     c = df["Close"]
     R = {}
     for n in (20, 50, 100, 200):
@@ -159,6 +320,26 @@ def regole(df, vix):
             R[f"{base} + filtro VIX"] = R[base].where(vix_ok, 0)
         panico = v >= v.rolling(252, min_periods=120).quantile(0.9)
         R["Acquisto su picco VIX"] = pd.Series(np.where(panico, 1, 0), index=df.index)
+
+    # Geopolitica: segnale il primo giorno di borsa successivo all'inizio di un picco
+    if picchi:
+        n = len(df)
+        subito, dopo3 = np.zeros(n), np.zeros(n)
+        for d in picchi:
+            i = df.index.searchsorted(pd.Timestamp(d))
+            if i >= n:          # evento di oggi, barra non ancora disponibile: ingresso alla prossima apertura
+                i = n - 1
+            subito[i] = 1
+            if i + 3 < n:
+                dopo3[i + 3] = 1
+        R["Geo: acquisto dopo picco"] = pd.Series(subito, index=df.index)
+        R["Geo: vendita dopo picco"] = pd.Series(-subito, index=df.index)
+        R["Geo: acquisto 3 giorni dopo picco"] = pd.Series(dopo3, index=df.index)
+        R["Geo: vendita 3 giorni dopo picco"] = pd.Series(-dopo3, index=df.index)
+    if regime_geo is not None:
+        g = regime_geo.reindex(df.index, method="ffill").fillna(False).astype(bool)
+        R["Geo: rischio elevato, acquisto"] = pd.Series(np.where(g, 1, 0), index=df.index)
+        R["Geo: rischio elevato, vendita"] = pd.Series(np.where(g, -1, 0), index=df.index)
 
     for k in R:
         R[k] = pd.Series(R[k], index=df.index).fillna(0).astype(float)
@@ -249,27 +430,60 @@ def ricerca(dati):
     return ris.sort_values(["Robusta", "Conferme_classe", "Robustezza"], ascending=False)
 
 
+def forza(riga):
+    """Punteggio 0-100 della forza statistica di una regola."""
+    if riga is None:
+        return 0
+    t = min(max(float(riga["Robustezza"]), 0), 5) * 10                      # max 50
+    c = int(riga["Conferme_classe"])
+    conf = 0 if c <= 1 else (15 if c == 2 else (25 if c == 3 else 30))       # max 30
+    hit = min(max((float(riga["Hit_OOS_%"]) - 50) * 2, 0), 20)              # max 20
+    return int(round(t + conf + hit))
+
+
+def fascia(p):
+    return "forte" if p >= 75 else ("moderato" if p >= 50 else ("debole" if p >= 25 else "assente"))
+
+
+def segnale_attuale(R, riga):
+    s = R[riga["Regola"]].iloc[-1]
+    if riga["Modo"] == "Solo long":
+        s = max(s, 0)
+    elif riga["Modo"] == "Solo short":
+        s = min(s, 0)
+    return int(s)
+
+
 def segnali_oggi(dati, ris):
     out = []
     for nome, (df, R, classe) in dati.items():
         base = {"Strumento": nome, "Classe": classe, "Ultimo dato": df.index[-1].strftime("%d/%m/%Y"),
                 "ATR14_%": float(df["ATR"].iloc[-1] / df["Close"].iloc[-1] * 100),
                 "Prezzo": float(df["Close"].iloc[-1])}
-        sub = ris[(ris["Strumento"] == nome) & (ris["Robusta"])] if not ris.empty else ris
+        tutte = ris[ris["Strumento"] == nome] if not ris.empty else ris
+        sub = tutte[tutte["Robusta"]] if not tutte.empty else tutte
         if sub.empty:
-            out.append({**base, "Stato": "nessuna"})
+            cand = tutte[(tutte["RetMedio_IS_%"] > 0) & (tutte["RetMedio_OOS_%"] > 0)] if not tutte.empty else tutte
+            best_c = cand.sort_values("Robustezza", ascending=False).iloc[0] if not cand.empty else None
+            p = min(forza(best_c), 24)          # senza regola robusta non c'e' vantaggio misurabile
+            out.append({**base, "Stato": "nessuna", "Forza": p, "Fascia": fascia(p)})
             continue
         best = sub.iloc[0]
-        s = R[best["Regola"]].iloc[-1]
-        if best["Modo"] == "Solo long":
-            s = max(s, 0)
-        elif best["Modo"] == "Solo short":
-            s = min(s, 0)
+        # un segnale geopolitico robusto che scatta oggi ha la precedenza
+        geo = sub[sub["Regola"].str.startswith("Geo:")]
+        for _, g in geo.sort_values("Robustezza", ascending=False).iterrows():
+            if segnale_attuale(R, g) != 0:
+                best = g
+                break
+        s = segnale_attuale(R, best)
         dist = float(best["MAE90_%"]) * 1.2
         stato = {1: "rialzo", -1: "ribasso"}.get(int(s), "fuori")
         if stato != "fuori" and int(best["Conferme_classe"]) < MIN_CONFERME:
             stato += "-debole"      # direzione indicata ma regola non confermata nella classe
-        out.append({**base, "Stato": stato,
+        p = forza(best)
+        # la fascia rispecchia lo stato: robusta ma non confermata = debole; confermata = almeno moderato
+        p = min(max(p, 25), 49) if int(best["Conferme_classe"]) < MIN_CONFERME else max(p, 50)
+        out.append({**base, "Stato": stato, "Forza": p, "Fascia": fascia(p),
                     "Regola": best["Regola"], "Modo": best["Modo"],
                     "Orizzonte_gg": int(best["Orizzonte_gg"]),
                     "Conferme_classe": int(best["Conferme_classe"]),
@@ -296,7 +510,39 @@ ETICHETTE = {"rialzo": "Rialzo", "ribasso": "Ribasso", "fuori": "Stare fuori",
              "nessuna": "Nessuna regola valida"}
 
 
-def pagina(seg, ris, aggiornato):
+def blocco_radar(radar, gpr):
+    e = html.escape
+    liv = radar["livello"]
+    testo_liv = {"alto": "Alto", "elevato": "Elevato", "normale": "Normale",
+                 "non disponibile": "Non disponibile"}[liv]
+    righe = [f'<div class="testa"><span class="nome">Radar geopolitico</span>'
+             f'<span class="stato">{testo_liv}</span></div>']
+    if liv != "non disponibile":
+        conf = f", {num(radar['rapporto'])} volte la media recente" if radar.get("rapporto") else ""
+        righe.append(f'<p class="det">{radar["conteggio"]} titoli su conflitti e attacchi nelle ultime 24 ore{conf}.</p>')
+        if radar["aree"]:
+            righe.append('<p class="det">Aree più citate: ' + "; ".join(
+                f"{e(a)} (mercati sensibili: {e(asset)})" for a, _, asset in radar["aree"]) + ".</p>")
+        if liv == "alto":
+            righe.append('<p class="det"><strong>Trattato come nuovo picco geopolitico:</strong> le regole '
+                         '"Geo" robuste possono dare segnale oggi.</p>')
+        if radar["titoli"]:
+            righe.append('<ul class="titoli">' + "".join(
+                f'<li><a href="{e(t["link"])}" rel="noopener" target="_blank">{e(t["titolo"])}</a></li>'
+                for t in radar["titoli"]) + "</ul>")
+    righe.append('<p class="det">Il radar è un indicatore di attenzione, non testato sul passato. '
+                 + (f"Indice GPR storico aggiornato al {gpr.index[-1].strftime('%d/%m/%Y')}." if gpr is not None
+                    else "Indice GPR storico non disponibile oggi.") + "</p>")
+    return f'<section><h2>Geopolitica</h2><div class="riga radar r-{liv.replace(" ", "-")}">{"".join(righe)}</div></section>'
+
+
+def barra_forza(p, fa):
+    return (f'<div class="forza" role="img" aria-label="Forza del vantaggio {p} su 100, {fa}">'
+            f'<div class="traccia"><div class="pieno f-{fa}" style="width:{p}%"></div></div>'
+            f'<span class="punti">{p}<small>/100</small> {fa}</span></div>')
+
+
+def pagina(seg, ris, aggiornato, radar, gpr):
     e = html.escape
     operativi = seg[seg["Stato"].isin(["rialzo", "ribasso"])]
     n_op, n_tot = len(operativi), len(seg)
@@ -335,6 +581,7 @@ def pagina(seg, ris, aggiornato):
             righe.append(
                 f'<li class="riga s-{r["Stato"]}"><div class="testa"><span class="nome">{e(r["Strumento"])}</span>'
                 f'<span class="stato">{ETICHETTE[r["Stato"]]}</span></div>'
+                + barra_forza(int(r["Forza"]), r["Fascia"])
                 + "".join(f'<p class="det">{d}</p>' for d in det) + "</li>")
         gruppi.append(f'<section><h2>{classe}</h2><ul>{"".join(righe)}</ul></section>')
 
@@ -391,6 +638,18 @@ ul{{list-style:none;margin:0;padding:0}}
 .s-rialzo-debole .stato,.s-ribasso-debole .stato{{background:var(--attesa-f);color:var(--attesa)}}
 .s-nessuna{{border-left-color:var(--filo)}} .s-nessuna .nome{{color:var(--tenue)}}
 .det{{margin:.2rem 0 0;font-size:.85rem;color:var(--tenue)}}
+.forza{{display:flex;align-items:center;gap:.6rem;margin:.45rem 0 .2rem}}
+.traccia{{flex:1;height:6px;background:var(--neutro-f);border-radius:3px;overflow:hidden}}
+.pieno{{height:100%;background:var(--neutro)}}
+.f-debole{{background:var(--attesa)}} .f-moderato{{background:var(--inchiostro)}} .f-forte{{background:var(--su)}}
+.punti{{font-size:.8rem;font-weight:600;white-space:nowrap;min-width:6.5rem;text-align:right}}
+.punti small{{font-weight:400;color:var(--tenue)}}
+.radar{{border-left-color:var(--neutro)}}
+.r-elevato{{border-left-color:var(--attesa)}} .r-elevato .stato{{background:var(--attesa-f);color:var(--attesa)}}
+.r-alto{{border-left-color:var(--giu)}} .r-alto .stato{{background:var(--giu-f);color:var(--giu)}}
+.titoli{{margin:.5rem 0 .2rem;padding:0}}
+.titoli li{{font-size:.82rem;margin:.35rem 0;line-height:1.35}}
+.titoli a{{text-decoration:none;border-bottom:1px solid var(--filo)}}
 details{{margin-top:2rem;border-top:1px solid var(--filo);padding-top:1rem}}
 summary{{cursor:pointer;font-weight:600}}
 .scorri{{overflow-x:auto;margin-top:.75rem}}
@@ -405,6 +664,7 @@ a{{color:inherit}}
 <header><p>Aggiornato {e(aggiornato)}</p></header>
 <h1 class="verdetto">{e(verdetto)}</h1>
 <p class="sotto">{e(sotto)}</p>
+{blocco_radar(radar, gpr)}
 {"".join(gruppi)}
 <details><summary>Regole che superano la selezione</summary>{tab_rob}</details>
 <details><summary>In osservazione, non ancora valide</summary>
@@ -412,7 +672,11 @@ a{{color:inherit}}
 <details><summary>Come leggere questa pagina</summary>
 <p class="vuoto">Ogni giorno vengono ripetute {n_test} prove su dati 2010-oggi. Una regola è valida solo se batte il semplice
 mantenimento dello strumento sia nel 2010-2019 sia dal 2020 in poi. Un segnale diventa operativo solo se la stessa regola vale anche su almeno un altro strumento della stessa classe;
-altrimenti è segnalato come da confermare. Il segnale vale per un ingresso all'apertura successiva
+altrimenti è segnalato come da confermare.
+La forza da 0 a 100 somma: significatività statistica in entrambi i periodi (fino a 50 punti), conferme su altri strumenti
+della classe (fino a 30) e percentuale di operazioni positive dal 2020 (fino a 20). Sotto 25 non c'è vantaggio misurabile,
+25-49 debole, 50-74 moderato, da 75 forte. Le regole "Geo" usano i picchi dell'indice di rischio geopolitico di Caldara e
+Iacoviello (Federal Reserve) e, per i giorni più recenti, il radar delle notizie. Il segnale vale per un ingresso all'apertura successiva
 (alla chiusura per le valute) e per il numero di giorni indicato. La distanza della barriera copre il 90% delle oscillazioni
 contrarie storiche più un margine del 20%. Costi di finanziamento dei Knock-Out non inclusi.</p>
 <p class="vuoto"><a href="dati/segnali_oggi.csv">Segnali in CSV</a> · <a href="dati/risultati_completi.csv">Tutti i risultati in CSV</a></p>
@@ -424,22 +688,34 @@ contrarie storiche più un margine del 20%. Costi di finanziamento dei Knock-Out
 # --------------------------------------------------------------------------
 # TELEGRAM (facoltativo)
 # --------------------------------------------------------------------------
-def telegram(seg, aggiornato):
+def telegram(seg, aggiornato, radar):
+    """Invia un messaggio solo quando segnali operativi o livello del radar cambiano."""
     token, chat = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
-    if not token or not chat:
-        return
     op = seg[seg["Stato"].isin(["rialzo", "ribasso"])]
+    stato = {"segnali": sorted(f"{r['Strumento']}|{r['Stato']}" for _, r in op.iterrows()),
+             "radar": radar["livello"]}
+    percorso = os.path.join(CARTELLA, "dati", "ultimo_stato.json")
+    try:
+        precedente = json.load(open(percorso, encoding="utf-8"))
+    except Exception:
+        precedente = None
+    json.dump(stato, open(percorso, "w", encoding="utf-8"))
+    if not token or not chat or stato == precedente:
+        return
+    righe = [f"Trend Knock-Out, {aggiornato}"]
+    if radar["livello"] in ("alto", "elevato"):
+        aree = ", ".join(a for a, _, _ in radar["aree"]) or "varie"
+        righe.append(f"Radar geopolitico {radar['livello'].upper()} ({radar['conteggio']} titoli, aree: {aree})")
     if op.empty:
-        testo = f"Trend Knock-Out, {aggiornato}\nNessun segnale operativo oggi."
-    else:
-        righe = [f"{r['Strumento']}: {r['Stato'].upper()} per {int(r['Orizzonte_gg'])} gg, "
-                 f"barriera >= {num(r['Distanza_min_barriera_%'])}%" for _, r in op.iterrows()]
-        testo = f"Trend Knock-Out, {aggiornato}\n" + "\n".join(righe)
+        righe.append("Nessun segnale operativo.")
+    for _, r in op.iterrows():
+        righe.append(f"{r['Strumento']}: {r['Stato'].upper()} per {int(r['Orizzonte_gg'])} gg, "
+                     f"forza {int(r['Forza'])}/100, barriera >= {num(r['Distanza_min_barriera_%'])}%")
     url = os.environ.get("PAGINA_URL")
     if url:
-        testo += f"\n{url}"
+        righe.append(url)
     try:
-        dati = urllib.parse.urlencode({"chat_id": chat, "text": testo}).encode()
+        dati = urllib.parse.urlencode({"chat_id": chat, "text": "\n".join(righe)}).encode()
         urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", dati, timeout=20)
         print("Messaggio Telegram inviato.")
     except Exception as ex:
@@ -455,6 +731,16 @@ def main():
     vdf = scarica("^VIX")
     vix = vdf["Close"] if vdf is not None else None
 
+    os.makedirs(os.path.join(CARTELLA, "dati"), exist_ok=True)
+    print("Scarico indice di rischio geopolitico (GPR)...")
+    gpr = scarica_gpr()
+    print("Leggo il radar delle notizie...")
+    storico = carica_storico_radar()
+    radar = radar_notizie(storico)
+    storico = salva_storico_radar(storico, radar)
+    print(f"   radar: {radar['livello']} ({radar['conteggio']} titoli)")
+    picchi, regime_geo = date_picchi_geo(gpr, storico)
+
     dati = {}
     for nome, (tk, classe) in STRUMENTI.items():
         print(f"Scarico {nome} ({tk})...")
@@ -463,7 +749,7 @@ def main():
             print("   dati insufficienti, strumento saltato")
             continue
         df = indicatori(df)
-        dati[nome] = (df, regole(df, vix), classe)
+        dati[nome] = (df, regole(df, vix, picchi, regime_geo), classe)
 
     if not dati:
         raise SystemExit("Nessun dato scaricato: Yahoo Finance non ha risposto.")
@@ -473,19 +759,18 @@ def main():
     seg = segnali_oggi(dati, ris)
     aggiornato = datetime.now(FUSO).strftime("%d/%m/%Y alle %H:%M")
 
-    os.makedirs(os.path.join(CARTELLA, "dati"), exist_ok=True)
     open(os.path.join(CARTELLA, ".nojekyll"), "w").close()
     opts = dict(sep=";", decimal=",", index=False, encoding="utf-8-sig")
     if not ris.empty:
         ris.round(3).to_csv(os.path.join(CARTELLA, "dati", "risultati_completi.csv"), **opts)
     seg.round(3).to_csv(os.path.join(CARTELLA, "dati", "segnali_oggi.csv"), **opts)
     with open(os.path.join(CARTELLA, "index.html"), "w", encoding="utf-8") as f:
-        f.write(pagina(seg, ris, aggiornato))
+        f.write(pagina(seg, ris, aggiornato, radar, gpr))
 
-    telegram(seg, aggiornato)
+    telegram(seg, aggiornato, radar)
     n_rob = int(ris["Robusta"].sum()) if not ris.empty else 0
     print(f"\nFatto in {time.time() - t0:.0f} s: {len(ris)} combinazioni, {n_rob} robuste.")
-    print(seg[["Strumento", "Stato"]].to_string(index=False))
+    print(seg[["Strumento", "Stato", "Forza", "Fascia"]].to_string(index=False))
     print(f"Pagina salvata in {CARTELLA}/index.html")
 
 
