@@ -1,38 +1,45 @@
 name: Aggiorna segnali
-
+ 
 on:
   schedule:
-    - cron: "15 5 * * *"   # ogni giorno alle 05:15 UTC (07:15 ora legale, 06:15 ora solare)
-  workflow_dispatch:        # permette l'avvio manuale dal pulsante "Run workflow"
-
+    # 6 volte al giorno (UTC): 07:15, 10:15, 13:15, 16:15, 19:15, 22:15 ora legale italiana
+    - cron: "15 5,8,11,14,17,20 * * *"
+  workflow_dispatch:        # avvio manuale dal pulsante "Run workflow"
+ 
 permissions:
   contents: write
-
+ 
+concurrency:
+  group: aggiorna-segnali
+  cancel-in-progress: false
+ 
 jobs:
   aggiorna:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
+ 
       - name: Installa librerie
         run: pip install -r requirements.txt
-
-      - name: Esegui ricerca e segnali
+ 
+      - name: Esegui ricerca, radar e segnali
         run: python trend_knockout.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           PAGINA_URL: ${{ vars.PAGINA_URL }}
-
+ 
       - name: Pubblica la pagina aggiornata
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898339+github-actions[bot]@users.noreply.github.com"
           git add docs
-          git diff --staged --quiet || git commit -m "Aggiornamento $(date -u +%F)"
+          git diff --staged --quiet || git commit -m "Aggiornamento $(date -u +'%F %H:%M')"
+          git pull --rebase
           git push
+ 
