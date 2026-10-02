@@ -2,15 +2,15 @@
 S&P 500;Indici;01/10/2026;0,861;7666,45;nessuna;16;assente;;;;;;;
 Nasdaq 100;Indici;01/10/2026;1,234;30501,561;nessuna;24;assente;;;;;;;
 DAX;Indici;01/10/2026;1,175;24939,35;nessuna;10;assente;;;;;;;
-FTSE MIB;Indici;01/10/2026;1,329;50237,859;nessuna;24;assente;;;;;;;
+FTSE MIB;Indici;01/10/2026;1,329;50238,0;nessuna;24;assente;;;;;;;
 Euro Stoxx 50;Indici;01/10/2026;1,146;6175,45;nessuna;20;assente;;;;;;;
-Oro;Commodities;01/10/2026;2,281;4209,2;nessuna;24;assente;;;;;;;
-Argento;Commodities;01/10/2026;2,486;61,41;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;01/10/2026;4,984;92,93;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;01/10/2026;4,442;2,949;nessuna;13;assente;;;;;;;
-EUR/USD;Valute;01/10/2026;0,507;1,125;nessuna;19;assente;;;;;;;
-GBP/USD;Valute;01/10/2026;0,544;1,32;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;01/10/2026;0,904;158,068;rialzo-debole;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,239;1,407;71,073
-EUR/CHF;Valute;01/10/2026;0,523;0,934;nessuna;12;assente;;;;;;;
-Bitcoin;Cripto;01/10/2026;2,615;84775,578;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;01/10/2026;3,233;2701,11;nessuna;24;assente;;;;;;;
+Oro;Commodities;02/10/2026;2,215;4217,2;nessuna;24;assente;;;;;;;
+Argento;Commodities;02/10/2026;2,363;61,595;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;02/10/2026;4,767;92,29;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;02/10/2026;4,288;2,92;nessuna;13;assente;;;;;;;
+EUR/USD;Valute;02/10/2026;0,528;1,125;nessuna;19;assente;;;;;;;
+GBP/USD;Valute;02/10/2026;0,547;1,321;nessuna;21;assente;;;;;;;
+USD/JPY;Valute;02/10/2026;0,865;157,822;rialzo-debole;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,283;1,407;71,075
+EUR/CHF;Valute;02/10/2026;0,59;0,933;nessuna;16;assente;;;;;;;
+Bitcoin;Cripto;02/10/2026;2,67;86276,961;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;02/10/2026;3,245;2724,22;nessuna;24;assente;;;;;;;
