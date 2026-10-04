@@ -8,9 +8,9 @@ Oro;Commodities;02/10/2026;2,323;4162,3;nessuna;24;assente;;;;;;;
 Argento;Commodities;02/10/2026;2,562;60,415;nessuna;24;assente;;;;;;;
 Petrolio WTI;Commodities;02/10/2026;5,147;91,11;nessuna;22;assente;;;;;;;
 Gas naturale;Commodities;02/10/2026;4,335;3,035;nessuna;13;assente;;;;;;;
-EUR/USD;Valute;02/10/2026;0,535;1,126;nessuna;19;assente;;;;;;;
-GBP/USD;Valute;02/10/2026;0,546;1,324;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;04/10/2026;0,832;157,83;rialzo-debole;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,235;1,407;71,076
-EUR/CHF;Valute;02/10/2026;0,642;0,932;nessuna;16;assente;;;;;;;
-Bitcoin;Cripto;04/10/2026;2,431;85323,656;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;04/10/2026;2,982;2701,69;nessuna;24;assente;;;;;;;
+EUR/USD;Valute;04/10/2026;0,508;1,126;nessuna;19;assente;;;;;;;
+GBP/USD;Valute;04/10/2026;0,533;1,324;nessuna;21;assente;;;;;;;
+USD/JPY;Valute;04/10/2026;0,844;157,762;rialzo-debole;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,235;1,407;71,076
+EUR/CHF;Valute;04/10/2026;0,607;0,932;nessuna;16;assente;;;;;;;
+Bitcoin;Cripto;04/10/2026;2,465;85820,141;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;04/10/2026;2,982;2703,92;nessuna;24;assente;;;;;;;
