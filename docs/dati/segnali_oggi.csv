@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
 S&P 500;Indici;02/10/2026;0,876;7722,72;nessuna;16;assente;;;;;;;
 Nasdaq 100;Indici;02/10/2026;1,254;30807,93;nessuna;24;assente;;;;;;;
-DAX;Indici;05/10/2026;1,13;25290,119;nessuna;10;assente;;;;;;;
-FTSE MIB;Indici;05/10/2026;1,296;50684,93;nessuna;24;assente;;;;;;;
-Euro Stoxx 50;Indici;05/10/2026;1,125;6251,14;nessuna;20;assente;;;;;;;
-Oro;Commodities;05/10/2026;2,219;4195,5;nessuna;24;assente;;;;;;;
-Argento;Commodities;05/10/2026;2,467;62,045;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;05/10/2026;5,073;89,46;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;05/10/2026;4,135;3,034;nessuna;13;assente;;;;;;;
+DAX;Indici;05/10/2026;1,145;25219,5;nessuna;10;assente;;;;;;;
+FTSE MIB;Indici;05/10/2026;1,302;50463,32;nessuna;24;assente;;;;;;;
+Euro Stoxx 50;Indici;05/10/2026;1,13;6224,22;nessuna;20;assente;;;;;;;
+Oro;Commodities;05/10/2026;2,222;4190,7;nessuna;24;assente;;;;;;;
+Argento;Commodities;05/10/2026;2,476;62,255;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;05/10/2026;5,027;90,29;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;05/10/2026;4,148;3,03;nessuna;13;assente;;;;;;;
 EUR/USD;Valute;05/10/2026;0,564;1,121;nessuna;19;assente;;;;;;;
 GBP/USD;Valute;05/10/2026;0,54;1,323;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;05/10/2026;0,861;157,765;rialzo-debole;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,235;1,407;71,076
-EUR/CHF;Valute;05/10/2026;0,651;0,929;nessuna;16;assente;;;;;;;
-Bitcoin;Cripto;05/10/2026;2,453;86455,367;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;05/10/2026;2,928;2726,43;nessuna;24;assente;;;;;;;
+USD/JPY;Valute;02/10/2026;0,89;157,927;rialzo-debole;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,283;1,407;71,075
+EUR/CHF;Valute;05/10/2026;0,65;0,931;nessuna;16;assente;;;;;;;
+Bitcoin;Cripto;05/10/2026;2,462;86150,953;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;05/10/2026;2,935;2719,75;nessuna;24;assente;;;;;;;
