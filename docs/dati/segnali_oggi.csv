@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
-S&P 500;Indici;07/10/2026;0,861;7801,12;nessuna;16;assente;;;;;;;
-Nasdaq 100;Indici;07/10/2026;1,191;31120,518;nessuna;24;assente;;;;;;;
+S&P 500;Indici;07/10/2026;0,861;7801,77;nessuna;16;assente;;;;;;;
+Nasdaq 100;Indici;07/10/2026;1,19;31160,076;nessuna;24;assente;;;;;;;
 DAX;Indici;07/10/2026;1,183;25104,359;nessuna;9;assente;;;;;;;
 FTSE MIB;Indici;07/10/2026;1,447;49972,25;nessuna;24;assente;;;;;;;
 Euro Stoxx 50;Indici;07/10/2026;1,194;6180,29;nessuna;20;assente;;;;;;;
-Oro;Commodities;07/10/2026;2,253;4146,8;nessuna;24;assente;;;;;;;
-Argento;Commodities;07/10/2026;2,499;60,405;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;07/10/2026;4,932;88,32;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;07/10/2026;3,923;3,201;nessuna;13;assente;;;;;;;
+Oro;Commodities;07/10/2026;2,26;4133,8;nessuna;24;assente;;;;;;;
+Argento;Commodities;07/10/2026;2,516;59,99;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;07/10/2026;4,91;89,12;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;07/10/2026;3,912;3,21;nessuna;13;assente;;;;;;;
 EUR/USD;Valute;07/10/2026;0,589;1,12;nessuna;19;assente;;;;;;;
 GBP/USD;Valute;07/10/2026;0,55;1,321;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;07/10/2026;0,797;157,995;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
+USD/JPY;Valute;07/10/2026;0,796;158,061;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
 EUR/CHF;Valute;07/10/2026;0,647;0,933;nessuna;16;assente;;;;;;;
-Bitcoin;Cripto;07/10/2026;2,591;83179,141;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;07/10/2026;3,24;2558,45;nessuna;23;assente;;;;;;;
+Bitcoin;Cripto;07/10/2026;2,582;83492,0;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;07/10/2026;3,245;2575,29;nessuna;23;assente;;;;;;;
