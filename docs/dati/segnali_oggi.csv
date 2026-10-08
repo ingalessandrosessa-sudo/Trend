@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
-S&P 500;Indici;08/10/2026;0,828;7791,79;nessuna;16;assente;;;;;;;
-Nasdaq 100;Indici;08/10/2026;1,162;31102,875;nessuna;24;assente;;;;;;;
-DAX;Indici;08/10/2026;1,195;24934,08;nessuna;9;assente;;;;;;;
-FTSE MIB;Indici;08/10/2026;1,479;49580,469;nessuna;24;assente;;;;;;;
-Euro Stoxx 50;Indici;08/10/2026;1,218;6155,41;nessuna;20;assente;;;;;;;
-Oro;Commodities;08/10/2026;2,153;4157,6;nessuna;24;assente;;;;;;;
-Argento;Commodities;08/10/2026;2,499;59,515;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;08/10/2026;4,757;92,26;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;08/10/2026;3,82;3,23;nessuna;13;assente;;;;;;;
+S&P 500;Indici;08/10/2026;0,872;7733,22;nessuna;16;assente;;;;;;;
+Nasdaq 100;Indici;08/10/2026;1,267;30574,875;nessuna;24;assente;;;;;;;
+DAX;Indici;08/10/2026;1,202;24806,971;nessuna;9;assente;;;;;;;
+FTSE MIB;Indici;08/10/2026;1,488;49297,879;nessuna;24;assente;;;;;;;
+Euro Stoxx 50;Indici;08/10/2026;1,224;6126,73;nessuna;20;assente;;;;;;;
+Oro;Commodities;08/10/2026;2,153;4167,3;nessuna;24;assente;;;;;;;
+Argento;Commodities;08/10/2026;2,497;59,565;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;08/10/2026;4,859;90,86;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;08/10/2026;4,15;3,14;nessuna;13;assente;;;;;;;
 EUR/USD;Valute;08/10/2026;0,591;1,122;nessuna;19;assente;;;;;;;
-GBP/USD;Valute;08/10/2026;0,55;1,324;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;07/10/2026;0,793;158,296;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
-EUR/CHF;Valute;08/10/2026;0,639;0,934;nessuna;16;assente;;;;;;;
-Bitcoin;Cripto;08/10/2026;2,558;82607,953;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;08/10/2026;3,275;2530,96;nessuna;23;assente;;;;;;;
+GBP/USD;Valute;08/10/2026;0,55;1,323;nessuna;21;assente;;;;;;;
+USD/JPY;Valute;08/10/2026;0,779;157,542;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
+EUR/CHF;Valute;08/10/2026;0,641;0,932;nessuna;16;assente;;;;;;;
+Bitcoin;Cripto;08/10/2026;2,764;80565,047;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;08/10/2026;3,74;2413,76;nessuna;23;assente;;;;;;;
