@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
-S&P 500;Indici;12/10/2026;0,811;7804,18;nessuna;16;assente;;;;;;;
-Nasdaq 100;Indici;12/10/2026;1,195;30656,254;nessuna;24;assente;;;;;;;
+S&P 500;Indici;12/10/2026;0,814;7807,24;nessuna;16;assente;;;;;;;
+Nasdaq 100;Indici;12/10/2026;1,198;30664,697;nessuna;24;assente;;;;;;;
 DAX;Indici;12/10/2026;1,175;25277,68;nessuna;9;assente;;;;;;;
 FTSE MIB;Indici;12/10/2026;1,422;50035,0;nessuna;24;assente;;;;;;;
 Euro Stoxx 50;Indici;12/10/2026;1,181;6201,21;nessuna;20;assente;;;;;;;
-Oro;Commodities;12/10/2026;2,08;4190,5;nessuna;24;assente;;;;;;;
-Argento;Commodities;12/10/2026;2,345;60,53;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;12/10/2026;4,551;93,76;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;12/10/2026;4,139;3,152;nessuna;13;assente;;;;;;;
-EUR/USD;Valute;12/10/2026;0,584;1,116;nessuna;19;assente;;;;;;;
+Oro;Commodities;12/10/2026;2,078;4194,0;nessuna;24;assente;;;;;;;
+Argento;Commodities;12/10/2026;2,35;60,51;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;12/10/2026;4,602;93,2;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;12/10/2026;4,113;3,172;nessuna;13;assente;;;;;;;
+EUR/USD;Valute;12/10/2026;0,586;1,116;nessuna;19;assente;;;;;;;
 GBP/USD;Valute;12/10/2026;0,528;1,321;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;12/10/2026;0,721;158,651;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
-EUR/CHF;Valute;09/10/2026;0,619;0,932;nessuna;16;assente;;;;;;;
-Bitcoin;Cripto;12/10/2026;2,465;82347,078;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;12/10/2026;3,21;2505,85;nessuna;23;assente;;;;;;;
+USD/JPY;Valute;12/10/2026;0,721;158,632;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
+EUR/CHF;Valute;12/10/2026;0,61;0,931;nessuna;16;assente;;;;;;;
+Bitcoin;Cripto;12/10/2026;2,453;82986,477;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;12/10/2026;3,208;2521,6;nessuna;23;assente;;;;;;;
