@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
-S&P 500;Indici;12/10/2026;0,814;7807,24;nessuna;16;assente;;;;;;;
-Nasdaq 100;Indici;12/10/2026;1,198;30664,699;nessuna;24;assente;;;;;;;
-DAX;Indici;13/10/2026;1,138;25348,279;nessuna;9;assente;;;;;;;
-FTSE MIB;Indici;13/10/2026;1,365;50210,34;nessuna;24;assente;;;;;;;
-Euro Stoxx 50;Indici;13/10/2026;1,139;6195,88;nessuna;20;assente;;;;;;;
-Oro;Commodities;13/10/2026;2,01;4207,8;nessuna;24;assente;;;;;;;
-Argento;Commodities;13/10/2026;2,229;60,59;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;13/10/2026;4,487;91,99;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;13/10/2026;4,069;3,123;nessuna;13;assente;;;;;;;
-EUR/USD;Valute;13/10/2026;0,58;1,119;nessuna;19;assente;;;;;;;
-GBP/USD;Valute;13/10/2026;0,518;1,324;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;09/10/2026;0,746;158,063;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
-EUR/CHF;Valute;13/10/2026;0,594;0,931;nessuna;16;assente;;;;;;;
-Bitcoin;Cripto;13/10/2026;2,557;83545,57;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;13/10/2026;3,489;2508,23;nessuna;23;assente;;;;;;;
+S&P 500;Indici;13/10/2026;0,774;7800,03;nessuna;16;assente;;;;;;;
+Nasdaq 100;Indici;13/10/2026;1,186;30527,154;nessuna;24;assente;;;;;;;
+DAX;Indici;13/10/2026;1,146;25267,42;nessuna;9;assente;;;;;;;
+FTSE MIB;Indici;13/10/2026;1,379;49987,512;nessuna;24;assente;;;;;;;
+Euro Stoxx 50;Indici;13/10/2026;1,166;6170,39;nessuna;20;assente;;;;;;;
+Oro;Commodities;13/10/2026;2,02;4187,5;nessuna;24;assente;;;;;;;
+Argento;Commodities;13/10/2026;2,279;59,73;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;13/10/2026;4,408;93,67;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;13/10/2026;4,043;3,249;nessuna;13;assente;;;;;;;
+EUR/USD;Valute;13/10/2026;0,579;1,119;nessuna;19;assente;;;;;;;
+GBP/USD;Valute;13/10/2026;0,522;1,324;nessuna;21;assente;;;;;;;
+USD/JPY;Valute;13/10/2026;0,728;158,361;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
+EUR/CHF;Valute;09/10/2026;0,619;0,932;nessuna;16;assente;;;;;;;
+Bitcoin;Cripto;13/10/2026;2,558;83525,789;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;13/10/2026;3,476;2517,42;nessuna;23;assente;;;;;;;
