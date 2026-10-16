@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
-S&P 500;Indici;16/10/2026;0,898;7672,85;nessuna;16;assente;;;;;;;
-Nasdaq 100;Indici;16/10/2026;1,441;29315,34;nessuna;24;assente;;;;;;;
+S&P 500;Indici;16/10/2026;0,918;7659,44;nessuna;16;assente;;;;;;;
+Nasdaq 100;Indici;16/10/2026;1,485;29187,549;nessuna;24;assente;;;;;;;
 DAX;Indici;16/10/2026;1,118;25622,609;nessuna;10;assente;;;;;;;
 FTSE MIB;Indici;16/10/2026;1,346;49857,18;nessuna;24;assente;;;;;;;
 Euro Stoxx 50;Indici;16/10/2026;1,121;6204,23;nessuna;20;assente;;;;;;;
-Oro;Commodities;16/10/2026;2,003;4180,9;nessuna;24;assente;;;;;;;
-Argento;Commodities;16/10/2026;2,571;57,32;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;16/10/2026;4,132;98,66;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;16/10/2026;4,492;3,147;nessuna;13;assente;;;;;;;
-EUR/USD;Valute;16/10/2026;0,594;1,123;nessuna;19;assente;;;;;;;
-GBP/USD;Valute;16/10/2026;0,576;1,332;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;16/10/2026;0,655;158,172;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
+Oro;Commodities;16/10/2026;1,999;4189,4;nessuna;24;assente;;;;;;;
+Argento;Commodities;16/10/2026;2,579;57,135;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;16/10/2026;4,161;98,91;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;16/10/2026;4,521;3,127;nessuna;13;assente;;;;;;;
+EUR/USD;Valute;16/10/2026;0,593;1,124;nessuna;19;assente;;;;;;;
+GBP/USD;Valute;16/10/2026;0,575;1,333;nessuna;21;assente;;;;;;;
+USD/JPY;Valute;16/10/2026;0,656;157,998;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
 EUR/CHF;Valute;16/10/2026;0,562;0,926;nessuna;16;assente;;;;;;;
-Bitcoin;Cripto;16/10/2026;2,725;81380,828;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;16/10/2026;3,913;2419,19;nessuna;23;assente;;;;;;;
+Bitcoin;Cripto;16/10/2026;2,719;81562,547;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;16/10/2026;3,928;2410,02;nessuna;23;assente;;;;;;;
