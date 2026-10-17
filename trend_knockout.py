@@ -685,6 +685,147 @@ def segnali_oggi(dati, ris):
 
 
 # --------------------------------------------------------------------------
+# TREND IN ATTO (descrittivo: dice cosa sta facendo il mercato, non e' un segnale validato)
+# --------------------------------------------------------------------------
+TREND_ENTRA = 60        # punteggio per dichiarare un trend in corso
+TREND_ESCE = 20         # sotto questo valore (in assoluto) il trend si considera finito
+TREND_FORZA = 2.0       # per partire, movimento a 5 giorni di almeno 2 volte la volatilita' media (ATR)
+TREND_DAL = "2015-01-01"
+TREND_GIORNI = (1, 3, 5)
+TREND_ETICHETTE = {1: "Rialzo in corso", -1: "Ribasso in corso", 0: "Laterale"}
+
+
+def punteggio_trend(df):
+    """Punteggio da -100 a +100: media di 5 indicatori veloci, ognuno tra -1 e +1."""
+    c = df["Close"]
+    ema10 = c.ewm(span=10, adjust=False).mean()
+    sma20 = c.rolling(20).mean()
+    hh, ll = df["High"].rolling(10).max(), df["Low"].rolling(10).min()
+    posizione = ((c - ll) / (hh - ll).replace(0, np.nan) * 2 - 1).clip(-1, 1)
+    parti = pd.concat([np.sign(c - ema10),                 # prezzo sopra/sotto la media a 10 giorni
+                       np.sign(c - sma20),                 # prezzo sopra/sotto la media a 20 giorni
+                       np.sign(ema10 - ema10.shift(3)),    # media a 10 giorni in salita/discesa
+                       np.sign(c / c.shift(5) - 1),        # variazione degli ultimi 5 giorni
+                       posizione], axis=1)                 # posizione nel range degli ultimi 10 giorni
+    return (parti.mean(axis=1) * 100).round()
+
+
+def forza_movimento(df):
+    """Variazione degli ultimi 5 giorni misurata in volatilita' medie giornaliere (ATR a 14 giorni)."""
+    c, h, l = df["Close"], df["High"], df["Low"]
+    tr = pd.concat([h - l, (h - c.shift(1)).abs(), (l - c.shift(1)).abs()], axis=1).max(axis=1)
+    return (c - c.shift(5)) / wilder(tr, 14)
+
+
+def stati_trend(p, forza):
+    """1 rialzo, -1 ribasso, 0 laterale.
+    Parte con punteggio oltre +/-60 E movimento a 5 giorni oltre 2 ATR; finisce quando il punteggio torna sotto +/-20."""
+    out, st = [], 0
+    for v, f in zip(p.values, forza.reindex(p.index).values):
+        su = v >= TREND_ENTRA and f >= TREND_FORZA
+        giu = v <= -TREND_ENTRA and f <= -TREND_FORZA
+        if np.isnan(v) or np.isnan(f):
+            st = 0
+        elif st == 0:
+            st = 1 if su else (-1 if giu else 0)
+        elif st == 1 and v < TREND_ESCE:
+            st = -1 if giu else 0
+        elif st == -1 and v > -TREND_ESCE:
+            st = 1 if su else 0
+        out.append(st)
+    return pd.Series(out, index=p.index)
+
+
+def avvii_trend(df, st, classe, dal=TREND_DAL):
+    """Ogni avvio di rialzo/ribasso con il movimento nei giorni successivi (nella direzione del trend)."""
+    ap = ENTRATA_APERTURA[classe]
+    v = st.values
+    nuovi = np.flatnonzero((v != 0) & (np.r_[0, v[:-1]] != v) & (st.index >= pd.Timestamp(dal)))
+    righe = []
+    for i in nuovi:
+        d = int(v[i])
+        if ap and i + 1 >= len(df):
+            entrata = None
+        else:
+            entrata = df["Open"].iloc[i + 1] if ap else df["Close"].iloc[i]
+        riga = {"data": df.index[i], "dir": d, "prezzo": float(df["Close"].iloc[i])}
+        for h in TREND_GIORNI:
+            riga[f"r{h}"] = (d * (df["Close"].iloc[i + h] / entrata - 1) * 100
+                             if entrata is not None and i + h < len(df) else np.nan)
+        righe.append(riga)
+    return pd.DataFrame(righe, columns=["data", "dir", "prezzo"] + [f"r{h}" for h in TREND_GIORNI])
+
+
+def riassunto_avvii(a, d):
+    x = a[a["dir"] == d] if len(a) else a
+    out = {"n": len(x)}
+    for h in TREND_GIORNI:
+        r = x[f"r{h}"].dropna() if len(x) else pd.Series(dtype=float)
+        out[f"cont{h}"] = float((r > 0).mean() * 100) if len(r) else np.nan
+        out[f"media{h}"] = float(r.mean()) if len(r) else np.nan
+    return out
+
+
+def trend_oggi(dati):
+    out = []
+    for nome, (df, _, classe) in dati.items():
+        p = punteggio_trend(df)
+        st = stati_trend(p, forza_movimento(df))
+        s = int(st.iloc[-1])
+        diverso = np.flatnonzero(st.values != s)
+        da = df.index[diverso[-1] + 1] if len(diverso) else df.index[0]
+        storia = riassunto_avvii(avvii_trend(df, st, classe), s) if s != 0 else {}
+        out.append({"Strumento": nome, "Classe": classe, "Stato_n": s, "Stato": TREND_ETICHETTE[s],
+                    "Punteggio": int(p.iloc[-1]) if not np.isnan(p.iloc[-1]) else 0,
+                    "Dal": da.strftime("%d/%m/%Y"),
+                    "Giorni": int((df.index >= da).sum()),
+                    "Var5g_%": float((df["Close"].iloc[-1] / df["Close"].iloc[-6] - 1) * 100),
+                    "Ultimo dato": df.index[-1].strftime("%d/%m/%Y"),
+                    **{f"Storico_{k}": v for k, v in storia.items()}})
+    return pd.DataFrame(out)
+
+
+def blocco_trend(tr):
+    e = html.escape
+    classi = {1: "s-rialzo", -1: "s-ribasso", 0: "s-fuori"}
+    gruppi = []
+    for classe in ORDINE_CLASSI:
+        g = tr[tr["Classe"] == classe]
+        righe = []
+        for _, r in g.iterrows():
+            s = int(r["Stato_n"])
+            det = [f"Punteggio {r['Punteggio']:+d} su ±100 · ultimi 5 giorni {'+' if r['Var5g_%'] > 0 else ''}{num(r['Var5g_%'])}% · "
+                   f"ultimo dato {e(r['Ultimo dato'])}"]
+            if s == 0 and abs(r["Punteggio"]) >= TREND_ENTRA:
+                verso = "rialzista" if r["Punteggio"] > 0 else "ribassista"
+                det.insert(0, f"Direzione {verso}, ma il movimento è ancora piccolo rispetto alla volatilità "
+                              f"normale: nessun trend dichiarato.")
+            if s != 0:
+                det.insert(0, f"Dal {e(r['Dal'])} ({r['Giorni']} {'giorno' if r['Giorni'] == 1 else 'giorni'})")
+                if r.get("Storico_n", 0) and not pd.isna(r.get("Storico_cont3")):
+                    verso = "salire" if s == 1 else "scendere"
+                    det.append(f"Dal 2015, dopo {int(r['Storico_n'])} avvii simili, il prezzo ha continuato a {verso}: "
+                               + ", ".join(f"a {h} gg nel {num(r[f'Storico_cont{h}'], 0)}% dei casi "
+                                           f"(resa media {'+' if r[f'Storico_media{h}'] > 0 else ''}{num(r[f'Storico_media{h}'], 2)}% "
+                                           f"seguendo il trend)" for h in TREND_GIORNI))
+            righe.append(f'<li class="riga {classi[s]}"><div class="testa"><span class="nome">{e(r["Strumento"])}</span>'
+                         f'<span class="stato">{e(r["Stato"])}</span></div>'
+                         + "".join(f'<p class="det">{d}</p>' for d in det) + "</li>")
+        if righe:
+            gruppi.append(f'<h3 class="sotto-classe">{classe}</h3><ul>{"".join(righe)}</ul>')
+    attivi = tr[tr["Stato_n"] != 0]
+    sintesi = ("Nessun trend in corso: mercati laterali." if attivi.empty else
+               "; ".join(f"{r['Strumento']} {r['Stato'].lower()}" for _, r in attivi.iterrows()) + ".")
+    return (f'<section><h2>Trend in atto</h2><p class="det">{e(sintesi)}</p>'
+            f'<details class="interno" open><summary>Tutti gli strumenti</summary>{"".join(gruppi)}'
+            f'<p class="det">Descrive cosa sta facendo il mercato adesso (prezzo rispetto alle medie a 10 e 20 giorni, '
+            f'direzione della media, variazione a 5 giorni, posizione nel range di 10 giorni). Un trend parte solo se il '
+            f'movimento degli ultimi 5 giorni supera 2 volte la volatilità media dello strumento. Segue il movimento, '
+            f'non lo anticipa, e non è un segnale validato: le percentuali storiche dicono quanto spesso il '
+            f'movimento è continuato dopo avvii simili.</p></details></section>')
+
+
+# --------------------------------------------------------------------------
 # PAGINA WEB
 # --------------------------------------------------------------------------
 def num(x, d=1):
@@ -766,7 +907,7 @@ def barra_forza(p, fa):
             f'<span class="punti">{p}<small>/100</small> {fa}</span></div>')
 
 
-def pagina(seg, ris, aggiornato, radar, gpr, macro=None, calendario=None):
+def pagina(seg, ris, aggiornato, radar, gpr, macro=None, calendario=None, tr=None):
     macro = macro or {}
     calendario = calendario or []
     e = html.escape
@@ -888,6 +1029,8 @@ table{{border-collapse:collapse;font-size:.8rem;min-width:36rem}}
 th,td{{text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--filo)}}
 th{{color:var(--tenue);font-weight:600}}
 .oss li,.vuoto{{font-size:.85rem;color:var(--tenue);margin:.5rem 0}}
+h3.sotto-classe{{font-size:.85rem;font-weight:600;margin:1rem 0 .4rem;color:var(--tenue)}}
+.titolo-validati{{margin-top:2.5rem;color:var(--inchiostro)}}
 footer{{margin-top:2.5rem;font-size:.78rem;color:var(--tenue)}}
 a{{color:inherit}}
 :focus-visible{{outline:2px solid var(--inchiostro);outline-offset:2px}}
@@ -896,7 +1039,9 @@ a{{color:inherit}}
 <h1 class="verdetto">{e(verdetto)}</h1>
 <p class="sotto">{e(sotto)}</p>
 {blocco_radar(radar, gpr)}
+{blocco_trend(tr) if tr is not None and not tr.empty else ""}
 {blocco_macro(macro, calendario)}
+<h2 class="titolo-validati">Segnali validati statisticamente</h2>
 {"".join(gruppi)}
 <details><summary>Regole che superano la selezione</summary>{tab_rob}</details>
 <details><summary>In osservazione, non ancora valide</summary>
@@ -922,12 +1067,13 @@ contrarie storiche più un margine del 20%. Costi di finanziamento dei Knock-Out
 # --------------------------------------------------------------------------
 # TELEGRAM (facoltativo)
 # --------------------------------------------------------------------------
-def telegram(seg, aggiornato, radar):
-    """Invia un messaggio solo quando segnali operativi o livello del radar cambiano."""
+def telegram(seg, aggiornato, radar, tr=None):
+    """Invia un messaggio solo quando cambiano segnali operativi, trend in atto o livello del radar."""
     token, chat = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     op = seg[seg["Stato"].isin(["rialzo", "ribasso"])]
+    trend = {r["Strumento"]: r["Stato"] for _, r in tr.iterrows()} if tr is not None and not tr.empty else {}
     stato = {"segnali": sorted(f"{r['Strumento']}|{r['Stato']}" for _, r in op.iterrows()),
-             "radar": radar["livello"]}
+             "radar": radar["livello"], "trend": trend}
     percorso = os.path.join(CARTELLA, "dati", "ultimo_stato.json")
     try:
         precedente = json.load(open(percorso, encoding="utf-8"))
@@ -936,15 +1082,36 @@ def telegram(seg, aggiornato, radar):
     json.dump(stato, open(percorso, "w", encoding="utf-8"))
     if not token or not chat or stato == precedente:
         return
+    prima = (precedente or {}).get("trend", {})
+    cambi = [r for _, r in tr.iterrows() if prima.get(r["Strumento"]) != r["Stato"]] if trend else []
+    if not prima:          # primo avvio con la nuova sezione: si elencano solo i trend in corso
+        cambi = [r for r in cambi if int(r["Stato_n"]) != 0]
+    segnali_uguali = precedente is not None and precedente.get("segnali") == stato["segnali"] \
+        and precedente.get("radar") == stato["radar"]
+    if segnali_uguali and not cambi:
+        return
     righe = [f"Trend Knock-Out, {aggiornato}"]
+    if cambi:
+        righe.append("TREND IN ATTO (descrittivo, non validato):")
+        for r in cambi:
+            da = prima.get(r["Strumento"])
+            etichetta = r["Stato"].upper() if int(r["Stato_n"]) != 0 else "TREND FINITO, ora laterale"
+            riga = f"{r['Strumento']}: {etichetta} (punteggio {r['Punteggio']:+d}"
+            riga += f", 5 gg {r['Var5g_%']:+.1f}%)".replace(".", ",")
+            if da:
+                riga += f", prima {da.lower()}"
+            if int(r["Stato_n"]) != 0 and not pd.isna(r.get("Storico_cont3")):
+                riga += f". Storico: continua a 3 gg nel {r['Storico_cont3']:.0f}% dei casi"
+            righe.append(riga)
     if radar["livello"] in ("alto", "elevato"):
         aree = ", ".join(a for a, _, _ in radar["aree"]) or "varie"
         righe.append(f"Radar geopolitico {radar['livello'].upper()} ({radar['conteggio']} titoli, aree: {aree})")
-    if op.empty:
-        righe.append("Nessun segnale operativo.")
-    for _, r in op.iterrows():
-        righe.append(f"{r['Strumento']}: {r['Stato'].upper()} per {int(r['Orizzonte_gg'])} gg, "
-                     f"forza {int(r['Forza'])}/100, barriera >= {num(r['Distanza_min_barriera_%'])}%")
+    if not segnali_uguali:
+        if op.empty:
+            righe.append("Segnali validati: nessuno.")
+        for _, r in op.iterrows():
+            righe.append(f"{r['Strumento']}: {r['Stato'].upper()} per {int(r['Orizzonte_gg'])} gg, "
+                         f"forza {int(r['Forza'])}/100, barriera >= {num(r['Distanza_min_barriera_%'])}%")
     url = os.environ.get("PAGINA_URL")
     if url:
         righe.append(url)
@@ -995,6 +1162,7 @@ def main():
     ris = ricerca(dati)
     print(f"Ricerca completata in {time.time() - t0:.0f} s")
     seg = segnali_oggi(dati, ris)
+    tr = trend_oggi(dati)
     aggiornato = datetime.now(FUSO).strftime("%d/%m/%Y alle %H:%M")
 
     open(os.path.join(CARTELLA, ".nojekyll"), "w").close()
@@ -1002,13 +1170,15 @@ def main():
     if not ris.empty:
         ris.round(3).to_csv(os.path.join(CARTELLA, "dati", "risultati_completi.csv"), **opts)
     seg.round(3).to_csv(os.path.join(CARTELLA, "dati", "segnali_oggi.csv"), **opts)
+    tr.round(2).to_csv(os.path.join(CARTELLA, "dati", "trend_oggi.csv"), **opts)
     with open(os.path.join(CARTELLA, "index.html"), "w", encoding="utf-8") as f:
-        f.write(pagina(seg, ris, aggiornato, radar, gpr, macro, calendario))
+        f.write(pagina(seg, ris, aggiornato, radar, gpr, macro, calendario, tr))
 
-    telegram(seg, aggiornato, radar)
+    telegram(seg, aggiornato, radar, tr)
     n_rob = int(ris["Robusta"].sum()) if not ris.empty else 0
     print(f"\nFatto in {time.time() - t0:.0f} s: {len(ris)} combinazioni, {n_rob} robuste.")
     print(seg[["Strumento", "Stato", "Forza", "Fascia"]].to_string(index=False))
+    print(tr[["Strumento", "Stato", "Punteggio"]].to_string(index=False))
     print(f"Pagina salvata in {CARTELLA}/index.html")
 
 
