@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
-S&P 500;Indici;22/10/2026;0,957;7659,45;nessuna;16;assente;;;;;;;
-Nasdaq 100;Indici;22/10/2026;1,647;29031,824;nessuna;24;assente;;;;;;;
+S&P 500;Indici;22/10/2026;0,965;7663,43;nessuna;16;assente;;;;;;;
+Nasdaq 100;Indici;22/10/2026;1,677;28958,688;nessuna;24;assente;;;;;;;
 DAX;Indici;22/10/2026;1,233;25371,75;nessuna;10;assente;;;;;;;
 FTSE MIB;Indici;22/10/2026;1,553;48383,66;nessuna;24;assente;;;;;;;
 Euro Stoxx 50;Indici;22/10/2026;1,258;6087,01;nessuna;20;assente;;;;;;;
-Oro;Commodities;22/10/2026;1,945;4060,2;nessuna;24;assente;;;;;;;
-Argento;Commodities;22/10/2026;2,513;54,965;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;22/10/2026;4,587;99,27;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;22/10/2026;5,101;2,823;nessuna;13;assente;;;;;;;
-EUR/USD;Valute;22/10/2026;0,549;1,122;nessuna;19;assente;;;;;;;
-GBP/USD;Valute;22/10/2026;0,58;1,34;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;22/10/2026;0,646;157,01;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
-EUR/CHF;Valute;22/10/2026;0,566;0,922;nessuna;17;assente;;;;;;;
-Bitcoin;Cripto;22/10/2026;2,665;81097,141;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;22/10/2026;3,947;2376,09;nessuna;23;assente;;;;;;;
+Oro;Commodities;22/10/2026;1,977;4037,9;nessuna;24;assente;;;;;;;
+Argento;Commodities;22/10/2026;2,556;54,61;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;22/10/2026;4,603;99,06;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;22/10/2026;5,178;2,781;nessuna;13;assente;;;;;;;
+EUR/USD;Valute;22/10/2026;0,55;1,122;nessuna;19;assente;;;;;;;
+GBP/USD;Valute;22/10/2026;0,581;1,34;nessuna;21;assente;;;;;;;
+USD/JPY;Valute;22/10/2026;0,647;156,807;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
+EUR/CHF;Valute;22/10/2026;0,567;0,92;nessuna;17;assente;;;;;;;
+Bitcoin;Cripto;22/10/2026;2,661;81199,992;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;22/10/2026;3,942;2379,4;nessuna;23;assente;;;;;;;
