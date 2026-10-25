@@ -109,7 +109,7 @@ def date_bls(sigla):
 
 def date_bce():
     pagine = [f"https://www.ecb.europa.eu/press/govcdec/mopo/{a}/html/index_include.en.html" for a in ANNI]
-    d, err = raccogli(pagine, r"ecb\.mp(\d{6})", "%y%m%d")
+    d, err = raccogli(pagine, r"(?:ecb\.mp|/pr)(\d{6})[^\"]*\.en\.html", "%y%m%d")
     return d, f"ecb.europa.eu ({len(pagine) - err}/{len(pagine)} anni letti)"
 
 
@@ -146,6 +146,18 @@ def tutte_le_date():
             nfp.add(d)
         elif ev.startswith("Decisione BCE"):
             bce.add(d)
+    try:                                         # date ufficiali raccolte a mano da bls.gov ed ecb.europa.eu
+        fisse = pd.read_csv("date_eventi.csv", sep=";")
+        mappa = {"Inflazione USA": (cpi, "cpi"), "Occupazione USA": (nfp, "nfp"), "Decisione BCE": (bce, "bce")}
+        for ev, gruppo in fisse.groupby("evento"):
+            if ev in mappa:
+                mappa[ev][0].update(pd.to_datetime(gruppo["data"]))
+        n = fisse["evento"].value_counts()
+        f_cpi += f" + file date_eventi.csv ({n.get('Inflazione USA', 0)} date)"
+        f_nfp += f" + file date_eventi.csv ({n.get('Occupazione USA', 0)} date)"
+        f_bce += f" + file date_eventi.csv ({n.get('Decisione BCE', 0)} date)"
+    except Exception as ex:
+        print(f"   date_eventi.csv non leggibile: {ex}")
     if len(nfp) < 100:
         nfp |= primo_venerdi()
         f_nfp += "; integrato con la regola del primo venerdi' del mese (date approssimate)"
