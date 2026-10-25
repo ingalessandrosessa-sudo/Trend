@@ -4,16 +4,14 @@ Combinazioni provate: 320. Esame: costi inclusi, almeno 20 operazioni per period
 
 ## Esito: **NON SUPERATO** — nessuna regola diventa un segnale.
 
-Valide su un solo strumento della classe (non bastano): Occupazione USA EUR/CHF continua reazione 2 gg
-
 ## Date trovate per ogni appuntamento (controllo delle fonti)
 
 | Evento | Date | Prima | Ultima | 2010-19 | Dal 2020 | Fonte |
 |---|---|---|---|---|---|---|
 | Decisione Fed | 139 | 27/01/2010 | 16/09/2026 | 81 | 58 | federalreserve.gov (12/12 pagine lette) |
-| Inflazione USA | 1 | 14/10/2026 | 14/10/2026 | 0 | 1 | bls.gov archivio (non raggiungibile) |
-| Occupazione USA | 202 | 01/01/2010 | 02/10/2026 | 120 | 82 | bls.gov archivio (non raggiungibile); integrato con la regola del primo venerdi' del mese (date approssimate) |
-| Decisione BCE | 76 | 27/04/2017 | 10/09/2026 | 22 | 54 | ecb.europa.eu (17/17 anni letti) |
+| Inflazione USA | 202 | 16/12/2009 | 14/10/2026 | 121 | 81 | bls.gov archivio (non raggiungibile) + file date_eventi.csv (205 date) |
+| Occupazione USA | 202 | 04/12/2009 | 02/10/2026 | 121 | 81 | bls.gov archivio (non raggiungibile) + file date_eventi.csv (205 date) |
+| Decisione BCE | 155 | 03/12/2009 | 10/09/2026 | 101 | 54 | ecb.europa.eu (17/17 anni letti) + file date_eventi.csv (88 date) |
 | Scorte gas EIA | 668 | 03/01/2014 | 16/10/2026 | 313 | 355 | eia.gov |
 | Scorte petrolio EIA | 2094 | 05/09/1986 | 16/10/2026 | 1739 | 355 | eia.gov |
 
@@ -56,15 +54,18 @@ Se la misura è buona, nel giorno di uscita del dato scorte più alte del normal
 
 | Evento | Strumento | Regola | Giorni | Trade 2010-19 | t 2010-19 | Rend. % | Trade dal 2020 | t dal 2020 | Rend. % | In utile dal 2020 | Ultimo anno: trade, rend. % | Valida |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Decisione BCE | EUR/USD | Long attraverso l'evento | 1 | 22 | 1,02 | 0,08 | 54 | 1,66 | 0,13 | 57% | 8, -0,20 | no |
-| Decisione BCE | EUR/USD | Inverte reazione | 2 | 8 | 1,70 | 0,53 | 16 | 0,63 | 0,15 | 50% | 2, 0,07 | no |
-| Decisione BCE | EUR/CHF | Long attraverso l'evento | 1 | 22 | 0,51 | 0,02 | 54 | 2,23 | 0,12 | 59% | 8, 0,14 | no |
+| Decisione BCE | EUR/CHF | Long attraverso l'evento | 1 | 97 | 0,55 | 0,01 | 54 | 2,23 | 0,12 | 59% | 8, 0,14 | no |
+| Decisione BCE | EUR/USD | Long attraverso l'evento | 1 | 97 | 0,48 | 0,02 | 54 | 1,66 | 0,13 | 57% | 8, -0,20 | no |
+| Decisione BCE | EUR/CHF | Inverte reazione | 1 | 23 | 0,90 | 0,12 | 20 | 0,40 | 0,03 | 50% | 3, -0,17 | no |
 | Decisione Fed | Argento | Long attraverso l'evento | 1 | 79 | 1,35 | 0,27 | 58 | 1,31 | 0,44 | 55% | 8, 0,89 | no |
 | Decisione Fed | FTSE MIB | Short attraverso l'evento | 1 | 79 | 0,92 | 0,17 | 58 | 0,92 | 0,18 | 57% | 8, -0,18 | no |
 | Decisione Fed | DAX | Short attraverso l'evento | 1 | 79 | 1,02 | 0,13 | 58 | 0,83 | 0,19 | 55% | 8, 0,11 | no |
-| Occupazione USA | EUR/CHF | Continua reazione | 2 | 37 | 2,21 | 0,23 | 27 | 2,46 | 0,21 | 63% | 6, -0,02 | solo qui |
-| Occupazione USA | EUR/CHF | Continua reazione | 1 | 37 | 1,29 | 0,09 | 27 | 2,68 | 0,24 | 67% | 6, -0,03 | no |
-| Occupazione USA | GBP/USD | Short attraverso l'evento | 1 | 117 | 1,29 | 0,08 | 82 | 1,19 | 0,08 | 48% | 12, -0,02 | no |
+| Inflazione USA | FTSE MIB | Inverte reazione | 1 | 35 | 1,04 | 0,23 | 20 | 1,14 | 0,32 | 50% | 3, 0,06 | no |
+| Inflazione USA | Gas naturale | Inverte reazione | 1 | 30 | 0,95 | 0,52 | 15 | 0,98 | 0,99 | 53% | 1, -1,21 | no |
+| Inflazione USA | Ethereum | Continua reazione | 2 | 9 | 0,92 | 1,34 | 28 | 1,08 | 1,25 | 50% | 5, -1,62 | no |
+| Occupazione USA | Petrolio WTI | Inverte reazione | 2 | 37 | 1,69 | 0,69 | 27 | 1,34 | 1,33 | 48% | 3, 4,24 | no |
+| Occupazione USA | GBP/USD | Inverte reazione | 2 | 43 | 1,18 | 0,14 | 29 | 1,11 | 0,20 | 52% | 4, 0,06 | no |
+| Occupazione USA | GBP/USD | Short attraverso l'evento | 1 | 117 | 0,82 | 0,06 | 81 | 0,99 | 0,07 | 48% | 12, 0,15 | no |
 | Scorte gas EIA | Gas naturale | Contro la sorpresa | 1 | 70 | 1,43 | 0,51 | 73 | 1,05 | 0,46 | 53% | 12, 0,25 | no |
 | Scorte gas EIA | Gas naturale | Contro la sorpresa | 2 | 70 | 0,78 | 0,59 | 73 | 1,99 | 2,10 | 56% | 12, 6,13 | no |
 | Scorte gas EIA | Gas naturale | Short attraverso l'evento | 1 | 313 | 0,49 | 0,08 | 355 | 0,81 | 0,10 | 51% | 52, 0,45 | no |
