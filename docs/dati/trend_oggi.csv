@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Stato_n;Stato;Punteggio;Dal;Giorni;Var5g_%;Ultimo dato;Storico_n;Storico_cont1;Storico_media1;Storico_cont3;Storico_media3;Storico_cont5;Storico_media5
-S&P 500;Indici;0;Laterale;5;21/10/2026;5;0,14;27/10/2026;;;;;;;
-Nasdaq 100;Indici;0;Laterale;0;27/10/2026;1;0,54;27/10/2026;;;;;;;
+S&P 500;Indici;0;Laterale;5;21/10/2026;5;0,13;27/10/2026;;;;;;;
+Nasdaq 100;Indici;0;Laterale;1;27/10/2026;1;0,55;27/10/2026;;;;;;;
 DAX;Indici;0;Laterale;93;22/10/2026;4;1,13;27/10/2026;;;;;;;
 FTSE MIB;Indici;0;Laterale;9;27/10/2026;1;1,13;27/10/2026;;;;;;;
 Euro Stoxx 50;Indici;0;Laterale;8;17/09/2026;29;0,7;27/10/2026;;;;;;;
-Oro;Commodities;-1;Ribasso in corso;-85;23/10/2026;3;-1,58;27/10/2026;74,0;50,0;0,08;42,47;0,09;46,58;0,11
-Argento;Commodities;-1;Ribasso in corso;-86;28/09/2026;22;-5,53;27/10/2026;103,0;43,69;0,14;56,31;0,5;55,34;0,25
-Petrolio WTI;Commodities;1;Rialzo in corso;35;16/10/2026;8;-1,86;27/10/2026;80,0;47,5;0,02;41,25;-0,51;50,0;-0,19
-Gas naturale;Commodities;0;Laterale;5;27/10/2026;1;1,79;27/10/2026;;;;;;;
-EUR/USD;Valute;0;Laterale;-93;21/10/2026;5;-0,67;27/10/2026;;;;;;;
-GBP/USD;Valute;1;Rialzo in corso;45;22/10/2026;4;0,03;27/10/2026;67,0;53,73;0,03;49,25;-0,01;46,97;-0,14
-USD/JPY;Valute;0;Laterale;5;15/10/2026;9;-0,39;27/10/2026;;;;;;;
+Oro;Commodities;-1;Ribasso in corso;-86;23/10/2026;3;-1,69;27/10/2026;74,0;50,0;0,08;42,47;0,09;46,58;0,11
+Argento;Commodities;-1;Ribasso in corso;-86;28/09/2026;22;-5,58;27/10/2026;103,0;43,69;0,14;56,31;0,5;55,34;0,25
+Petrolio WTI;Commodities;1;Rialzo in corso;36;16/10/2026;8;-1,5;27/10/2026;80,0;47,5;0,02;41,25;-0,51;50,0;-0,19
+Gas naturale;Commodities;0;Laterale;47;27/10/2026;1;3,61;27/10/2026;;;;;;;
+EUR/USD;Valute;0;Laterale;-96;21/10/2026;5;-0,76;27/10/2026;;;;;;;
+GBP/USD;Valute;0;Laterale;4;27/10/2026;1;-0,0;27/10/2026;;;;;;;
+USD/JPY;Valute;0;Laterale;6;15/10/2026;9;-0,37;27/10/2026;;;;;;;
 EUR/CHF;Valute;-1;Ribasso in corso;-91;05/10/2026;17;-0,48;27/10/2026;45,0;35,56;-0,06;53,33;0,06;46,67;0,15
-Bitcoin;Cripto;-1;Ribasso in corso;-90;26/10/2026;2;-0,96;27/10/2026;96,0;44,79;-0,11;43,16;-0,05;41,05;-0,89
-Ethereum;Cripto;0;Laterale;-89;21/10/2026;7;-1,63;27/10/2026;;;;;;;
+Bitcoin;Cripto;-1;Ribasso in corso;-90;26/10/2026;2;-0,94;27/10/2026;96,0;44,79;-0,11;43,16;-0,05;41,05;-0,89
+Ethereum;Cripto;0;Laterale;-91;21/10/2026;7;-2,05;27/10/2026;;;;;;;
