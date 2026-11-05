@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Stato_n;Stato;Punteggio;Dal;Giorni;Var5g_%;Ultimo dato;Storico_n;Storico_cont1;Storico_media1;Storico_cont3;Storico_media3;Storico_cont5;Storico_media5
-S&P 500;Indici;0;Laterale;-32;21/10/2026;11;-0,71;04/11/2026;;;;;;;
-Nasdaq 100;Indici;-1;Ribasso in corso;-90;02/11/2026;3;-4,62;04/11/2026;85,0;47,06;-0,13;48,81;0,28;35,71;-0,54
-DAX;Indici;1;Rialzo in corso;98;29/10/2026;6;2,09;05/11/2026;95,0;43,16;-0,11;44,21;-0,17;56,84;0,12
-FTSE MIB;Indici;0;Laterale;99;30/10/2026;5;2,39;05/11/2026;;;;;;;
-Euro Stoxx 50;Indici;0;Laterale;97;17/09/2026;36;1,47;05/11/2026;;;;;;;
-Oro;Commodities;0;Laterale;96;04/11/2026;2;2,45;05/11/2026;;;;;;;
-Argento;Commodities;0;Laterale;8;05/11/2026;1;0,76;05/11/2026;;;;;;;
-Petrolio WTI;Commodities;-1;Ribasso in corso;-94;04/11/2026;2;-12,36;05/11/2026;74,0;50,0;0,17;53,42;0,25;49,32;-0,77
-Gas naturale;Commodities;0;Laterale;10;29/10/2026;6;-0,95;05/11/2026;;;;;;;
-EUR/USD;Valute;0;Laterale;88;21/10/2026;12;0,64;05/11/2026;;;;;;;
-GBP/USD;Valute;0;Laterale;93;28/10/2026;7;1,0;05/11/2026;;;;;;;
-USD/JPY;Valute;0;Laterale;97;15/10/2026;16;0,39;05/11/2026;;;;;;;
-EUR/CHF;Valute;-1;Ribasso in corso;-85;05/10/2026;24;-0,62;05/11/2026;45,0;35,56;-0,06;53,33;0,06;46,67;0,15
-Bitcoin;Cripto;0;Laterale;45;04/11/2026;2;2,68;05/11/2026;;;;;;;
-Ethereum;Cripto;1;Rialzo in corso;91;04/11/2026;2;5,92;05/11/2026;85,0;50,59;0,82;54,76;1,73;55,95;2,83
+S&P 500;Indici;-1;Ribasso in corso;-100;05/11/2026;1;-4,75;05/11/2026;90,0;37,08;-0,15;40,45;-0,14;35,96;-0,46
+Nasdaq 100;Indici;-1;Ribasso in corso;-100;02/11/2026;4;-9,43;05/11/2026;85,0;47,06;-0,13;49,41;0,34;35,71;-0,54
+DAX;Indici;1;Rialzo in corso;91;29/10/2026;6;1,1;05/11/2026;95,0;43,16;-0,11;44,21;-0,17;56,84;0,11
+FTSE MIB;Indici;0;Laterale;90;30/10/2026;5;1,01;05/11/2026;;;;;;;
+Euro Stoxx 50;Indici;0;Laterale;88;17/09/2026;36;0,39;05/11/2026;;;;;;;
+Oro;Commodities;0;Laterale;94;04/11/2026;2;2,03;05/11/2026;;;;;;;
+Argento;Commodities;-1;Ribasso in corso;-75;28/09/2026;29;-0,04;05/11/2026;103,0;43,69;0,14;56,31;0,5;55,34;0,25
+Petrolio WTI;Commodities;-1;Ribasso in corso;-91;04/11/2026;2;-10,96;05/11/2026;74,0;48,65;0,03;53,42;0,25;49,32;-0,77
+Gas naturale;Commodities;0;Laterale;11;29/10/2026;6;-0,2;05/11/2026;;;;;;;
+EUR/USD;Valute;0;Laterale;87;21/10/2026;12;0,61;05/11/2026;;;;;;;
+GBP/USD;Valute;0;Laterale;91;28/10/2026;7;0,93;05/11/2026;;;;;;;
+USD/JPY;Valute;0;Laterale;-33;15/10/2026;16;-0,01;05/11/2026;;;;;;;
+EUR/CHF;Valute;-1;Ribasso in corso;-89;05/10/2026;24;-0,74;05/11/2026;45,0;35,56;-0,06;53,33;0,06;46,67;0,15
+Bitcoin;Cripto;0;Laterale;-98;04/11/2026;2;-1,94;05/11/2026;;;;;;;
+Ethereum;Cripto;0;Laterale;-50;05/11/2026;1;-0,55;05/11/2026;;;;;;;
