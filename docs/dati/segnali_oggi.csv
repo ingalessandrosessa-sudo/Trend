@@ -1,16 +1,16 @@
 ﻿Strumento;Classe;Ultimo dato;ATR14_%;Prezzo;Stato;Forza;Fascia;Regola;Modo;Orizzonte_gg;Conferme_classe;Hit_OOS_%;Distanza_min_barriera_%;Leva_max_indicativa
-S&P 500;Indici;06/11/2026;1,363;7398,65;nessuna;16;assente;;;;;;;
-Nasdaq 100;Indici;06/11/2026;2,329;27074,295;nessuna;24;assente;;;;;;;
+S&P 500;Indici;06/11/2026;1,367;7376,86;nessuna;16;assente;;;;;;;
+Nasdaq 100;Indici;06/11/2026;2,336;26989,99;nessuna;24;assente;;;;;;;
 DAX;Indici;06/11/2026;1,443;25820,359;nessuna;10;assente;;;;;;;
-FTSE MIB;Indici;06/11/2026;1,599;50052,961;nessuna;24;assente;;;;;;;
+FTSE MIB;Indici;06/11/2026;1,599;50053,0;nessuna;24;assente;;;;;;;
 Euro Stoxx 50;Indici;06/11/2026;1,388;6170,49;nessuna;20;assente;;;;;;;
-Oro;Commodities;06/11/2026;2,126;4071,6;nessuna;10;assente;;;;;;;
-Argento;Commodities;06/11/2026;2,879;51,97;nessuna;24;assente;;;;;;;
-Petrolio WTI;Commodities;06/11/2026;5,309;91,1;nessuna;22;assente;;;;;;;
-Gas naturale;Commodities;06/11/2026;4,75;2,986;nessuna;14;assente;;;;;;;
-EUR/USD;Valute;06/11/2026;0,603;1,114;nessuna;19;assente;;;;;;;
-GBP/USD;Valute;06/11/2026;0,594;1,335;nessuna;21;assente;;;;;;;
-USD/JPY;Valute;06/11/2026;0,631;158,482;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
-EUR/CHF;Valute;06/11/2026;0,545;0,914;nessuna;17;assente;;;;;;;
-Bitcoin;Cripto;06/11/2026;3,113;75622,594;nessuna;24;assente;;;;;;;
-Ethereum;Cripto;06/11/2026;4,252;2223,67;nessuna;24;assente;;;;;;;
+Oro;Commodities;06/11/2026;2,125;4074,9;nessuna;10;assente;;;;;;;
+Argento;Commodities;06/11/2026;2,786;51,803;nessuna;24;assente;;;;;;;
+Petrolio WTI;Commodities;06/11/2026;5,326;90,83;nessuna;22;assente;;;;;;;
+Gas naturale;Commodities;06/11/2026;4,731;2,998;nessuna;14;assente;;;;;;;
+EUR/USD;Valute;06/11/2026;0,599;1,123;nessuna;19;assente;;;;;;;
+GBP/USD;Valute;06/11/2026;0,59;1,346;nessuna;21;assente;;;;;;;
+USD/JPY;Valute;07/11/2026;0,616;158,425;fuori;31;debole;ADX>20 + direzione DI;Long+Short;1,0;1,0;52,323;1,407;71,078
+EUR/CHF;Valute;06/11/2026;0,541;0,916;nessuna;17;assente;;;;;;;
+Bitcoin;Cripto;07/11/2026;2,941;75931,57;nessuna;24;assente;;;;;;;
+Ethereum;Cripto;07/11/2026;3,979;2243,06;nessuna;24;assente;;;;;;;
